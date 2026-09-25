@@ -1,0 +1,936 @@
+{
+  "1a6a2ebb97876651a9824c0d5ec2834a2a3cca1e32ff452255b373d9bb99624b": {
+    "payload": "Public maintenance knowledge. Verify applicability against the request and current code; quoted implementation is not proof of correctness.\n\n[local-9337bdeb4e7dc83a952703ab] Role: documented_contract\nApplies to: docs/docsite/rst/dev_guide/developing_python_3.rst:71\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:docs/docsite/rst/dev_guide/developing_python_3.rst:71-76\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nIn Python 2, the two types for these (:class:`str <python:str>` for bytes and\n:func:`unicode <python:unicode>` for text) are often used interchangeably.  When dealing only\nwith ASCII characters, the strings can be combined, compared, and converted\nfrom one type to another automatically.  When non-ASCII characters are\nintroduced, Python 2 starts throwing exceptions due to not knowing what encoding\nthe non-ASCII characters should be in.\n\n\n[local-4c945e251edc8a24145544b1] Role: documented_contract\nApplies to: docs/docsite/rst/user_guide/playbooks_variables.rst:21\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:docs/docsite/rst/user_guide/playbooks_variables.rst:21-21\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nNot all strings are valid Ansible variable names. A variable name must start with a letter, and can only include letters, numbers, and underscores. `Python keywords`_ are not valid variable names.\n\n\n[local-e86eb8778aa79c96461909a6] Role: existing_behavior\nApplies to: lib.ansible.utils.vars.isidentifier\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:lib/ansible/utils/vars.py:233-262\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef isidentifier(ident):\n    \"\"\"\n    Determines, if string is valid Python identifier using the ast module.\n    Originally posted at: http://stackoverflow.com/a/29586366\n    \"\"\"\n\n    if not isinstance(ident, string_types):\n        return False\n\n    try:\n        root = ast.parse(ident)\n    except SyntaxError:\n        return False\n\n    if not isinstance(root, ast.Module):\n        return False\n\n    if len(root.body) != 1:\n        return False\n\n    if not isinstance(root.body[0], ast.Expr):\n        return False\n\n    if not isinstance(root.body[0].value, ast.Name):\n        return False\n\n    if root.body[0].value.id != ident:\n        return False\n\n    return True\n\n\n[local-047fc2cebfabea0a1d83cd82] Role: documented_contract\nApplies to: lib.ansible.plugins.lookup.password._gen_candidate_chars.__doc__\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:lib/ansible/plugins/lookup/password.py:180-201\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    '''Generate a string containing all valid chars as defined by ``characters``\n\n    :arg characters: A list of character specs. The character specs are\n        shorthand names for sets of characters like 'digits', 'ascii_letters',\n        or 'punctuation' or a string to be included verbatim.\n\n    The values of each char spec can be:\n\n    * a name of an attribute in the 'strings' module ('digits' for example).\n      The value of the attribute will be added to the candidate chars.\n    * a string of characters. If the string isn't an attribute in 'string'\n      module, the string will be directly added to the candidate chars.\n\n    For example::\n\n        characters=['digits', '?|']``\n\n    will match ``string.digits`` and add all ascii digits.  ``'?|'`` will add\n    the question mark and pipe characters directly. Return will be the string::\n\n        u'0123456789?|'\n    '''\n",
+    "units": [
+      {
+        "unit_id": "local-9337bdeb4e7dc83a952703ab",
+        "repository": "ansible/ansible",
+        "source_revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+        "kind": "paragraph",
+        "applies_to": [
+          "docs/docsite/rst/dev_guide/developing_python_3.rst:71"
+        ],
+        "preconditions": [],
+        "statement": "In Python 2, the two types for these (:class:`str <python:str>` for bytes and\n:func:`unicode <python:unicode>` for text) are often used interchangeably.  When dealing only\nwith ASCII characters, the strings can be combined, compared, and converted\nfrom one type to another automatically.  When non-ASCII characters are\nintroduced, Python 2 starts throwing exceptions due to not knowing what encoding\nthe non-ASCII characters should be in.\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "docs/docsite/rst/dev_guide/developing_python_3.rst",
+            "revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+            "line_start": 71,
+            "line_end": 76,
+            "exact_excerpt": "In Python 2, the two types for these (:class:`str <python:str>` for bytes and\n:func:`unicode <python:unicode>` for text) are often used interchangeably.  When dealing only\nwith ASCII characters, the strings can be combined, compared, and converted\nfrom one type to another automatically.  When non-ASCII characters are\nintroduced, Python 2 starts throwing exceptions due to not knowing what encoding\nthe non-ASCII characters should be in.\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-9337bdeb4e7dc83a952703ab] Role: documented_contract\nApplies to: docs/docsite/rst/dev_guide/developing_python_3.rst:71\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:docs/docsite/rst/dev_guide/developing_python_3.rst:71-76\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nIn Python 2, the two types for these (:class:`str <python:str>` for bytes and\n:func:`unicode <python:unicode>` for text) are often used interchangeably.  When dealing only\nwith ASCII characters, the strings can be combined, compared, and converted\nfrom one type to another automatically.  When non-ASCII characters are\nintroduced, Python 2 starts throwing exceptions due to not knowing what encoding\nthe non-ASCII characters should be in.\n"
+      },
+      {
+        "unit_id": "local-4c945e251edc8a24145544b1",
+        "repository": "ansible/ansible",
+        "source_revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+        "kind": "paragraph",
+        "applies_to": [
+          "docs/docsite/rst/user_guide/playbooks_variables.rst:21"
+        ],
+        "preconditions": [],
+        "statement": "Not all strings are valid Ansible variable names. A variable name must start with a letter, and can only include letters, numbers, and underscores. `Python keywords`_ are not valid variable names.\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "docs/docsite/rst/user_guide/playbooks_variables.rst",
+            "revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+            "line_start": 21,
+            "line_end": 21,
+            "exact_excerpt": "Not all strings are valid Ansible variable names. A variable name must start with a letter, and can only include letters, numbers, and underscores. `Python keywords`_ are not valid variable names.\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-4c945e251edc8a24145544b1] Role: documented_contract\nApplies to: docs/docsite/rst/user_guide/playbooks_variables.rst:21\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:docs/docsite/rst/user_guide/playbooks_variables.rst:21-21\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nNot all strings are valid Ansible variable names. A variable name must start with a letter, and can only include letters, numbers, and underscores. `Python keywords`_ are not valid variable names.\n"
+      },
+      {
+        "unit_id": "local-e86eb8778aa79c96461909a6",
+        "repository": "ansible/ansible",
+        "source_revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.utils.vars.isidentifier"
+        ],
+        "preconditions": [],
+        "statement": "def isidentifier(ident):\n    \"\"\"\n    Determines, if string is valid Python identifier using the ast module.\n    Originally posted at: http://stackoverflow.com/a/29586366\n    \"\"\"\n\n    if not isinstance(ident, string_types):\n        return False\n\n    try:\n        root = ast.parse(ident)\n    except SyntaxError:\n        return False\n\n    if not isinstance(root, ast.Module):\n        return False\n\n    if len(root.body) != 1:\n        return False\n\n    if not isinstance(root.body[0], ast.Expr):\n        return False\n\n    if not isinstance(root.body[0].value, ast.Name):\n        return False\n\n    if root.body[0].value.id != ident:\n        return False\n\n    return True\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+            "line_start": 233,
+            "line_end": 262,
+            "exact_excerpt": "def isidentifier(ident):\n    \"\"\"\n    Determines, if string is valid Python identifier using the ast module.\n    Originally posted at: http://stackoverflow.com/a/29586366\n    \"\"\"\n\n    if not isinstance(ident, string_types):\n        return False\n\n    try:\n        root = ast.parse(ident)\n    except SyntaxError:\n        return False\n\n    if not isinstance(root, ast.Module):\n        return False\n\n    if len(root.body) != 1:\n        return False\n\n    if not isinstance(root.body[0], ast.Expr):\n        return False\n\n    if not isinstance(root.body[0].value, ast.Name):\n        return False\n\n    if root.body[0].value.id != ident:\n        return False\n\n    return True\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.MutableMapping",
+          "ansible.module_utils.common._collections_compat.MutableSequence",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "ast",
+          "json.dumps",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-e86eb8778aa79c96461909a6] Role: existing_behavior\nApplies to: lib.ansible.utils.vars.isidentifier\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:lib/ansible/utils/vars.py:233-262\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef isidentifier(ident):\n    \"\"\"\n    Determines, if string is valid Python identifier using the ast module.\n    Originally posted at: http://stackoverflow.com/a/29586366\n    \"\"\"\n\n    if not isinstance(ident, string_types):\n        return False\n\n    try:\n        root = ast.parse(ident)\n    except SyntaxError:\n        return False\n\n    if not isinstance(root, ast.Module):\n        return False\n\n    if len(root.body) != 1:\n        return False\n\n    if not isinstance(root.body[0], ast.Expr):\n        return False\n\n    if not isinstance(root.body[0].value, ast.Name):\n        return False\n\n    if root.body[0].value.id != ident:\n        return False\n\n    return True\n"
+      },
+      {
+        "unit_id": "local-047fc2cebfabea0a1d83cd82",
+        "repository": "ansible/ansible",
+        "source_revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.plugins.lookup.password._gen_candidate_chars.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    '''Generate a string containing all valid chars as defined by ``characters``\n\n    :arg characters: A list of character specs. The character specs are\n        shorthand names for sets of characters like 'digits', 'ascii_letters',\n        or 'punctuation' or a string to be included verbatim.\n\n    The values of each char spec can be:\n\n    * a name of an attribute in the 'strings' module ('digits' for example).\n      The value of the attribute will be added to the candidate chars.\n    * a string of characters. If the string isn't an attribute in 'string'\n      module, the string will be directly added to the candidate chars.\n\n    For example::\n\n        characters=['digits', '?|']``\n\n    will match ``string.digits`` and add all ascii digits.  ``'?|'`` will add\n    the question mark and pipe characters directly. Return will be the string::\n\n        u'0123456789?|'\n    '''\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/lookup/password.py",
+            "revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+            "line_start": 180,
+            "line_end": 201,
+            "exact_excerpt": "    '''Generate a string containing all valid chars as defined by ``characters``\n\n    :arg characters: A list of character specs. The character specs are\n        shorthand names for sets of characters like 'digits', 'ascii_letters',\n        or 'punctuation' or a string to be included verbatim.\n\n    The values of each char spec can be:\n\n    * a name of an attribute in the 'strings' module ('digits' for example).\n      The value of the attribute will be added to the candidate chars.\n    * a string of characters. If the string isn't an attribute in 'string'\n      module, the string will be directly added to the candidate chars.\n\n    For example::\n\n        characters=['digits', '?|']``\n\n    will match ``string.digits`` and add all ascii digits.  ``'?|'`` will add\n    the question mark and pipe characters directly. Return will be the string::\n\n        u'0123456789?|'\n    '''\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.module_utils._text.to_bytes",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.parsing.splitter.parse_kv",
+          "ansible.plugins.lookup.LookupBase",
+          "ansible.utils.encrypt.do_encrypt",
+          "ansible.utils.encrypt.random_password",
+          "ansible.utils.encrypt.random_salt",
+          "ansible.utils.path.makedirs_safe",
+          "hashlib",
+          "os",
+          "shutil",
+          "string",
+          "time"
+        ],
+        "serialized_payload": "[local-047fc2cebfabea0a1d83cd82] Role: documented_contract\nApplies to: lib.ansible.plugins.lookup.password._gen_candidate_chars.__doc__\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:lib/ansible/plugins/lookup/password.py:180-201\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    '''Generate a string containing all valid chars as defined by ``characters``\n\n    :arg characters: A list of character specs. The character specs are\n        shorthand names for sets of characters like 'digits', 'ascii_letters',\n        or 'punctuation' or a string to be included verbatim.\n\n    The values of each char spec can be:\n\n    * a name of an attribute in the 'strings' module ('digits' for example).\n      The value of the attribute will be added to the candidate chars.\n    * a string of characters. If the string isn't an attribute in 'string'\n      module, the string will be directly added to the candidate chars.\n\n    For example::\n\n        characters=['digits', '?|']``\n\n    will match ``string.digits`` and add all ascii digits.  ``'?|'`` will add\n    the question mark and pipe characters directly. Return will be the string::\n\n        u'0123456789?|'\n    '''\n"
+      }
+    ]
+  },
+  "0b0183e140fbcee1797aac9cd7e358fc6061c19ce69a8a3cfe25e6dc3320dff8": {
+    "payload": "Public maintenance knowledge. Verify applicability against the request and current code; quoted implementation is not proof of correctness.\n\n[local-4c945e251edc8a24145544b1] Role: documented_contract\nApplies to: docs/docsite/rst/user_guide/playbooks_variables.rst:21\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:docs/docsite/rst/user_guide/playbooks_variables.rst:21-21\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nNot all strings are valid Ansible variable names. A variable name must start with a letter, and can only include letters, numbers, and underscores. `Python keywords`_ are not valid variable names.\n\n\n[local-9337bdeb4e7dc83a952703ab] Role: documented_contract\nApplies to: docs/docsite/rst/dev_guide/developing_python_3.rst:71\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:docs/docsite/rst/dev_guide/developing_python_3.rst:71-76\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nIn Python 2, the two types for these (:class:`str <python:str>` for bytes and\n:func:`unicode <python:unicode>` for text) are often used interchangeably.  When dealing only\nwith ASCII characters, the strings can be combined, compared, and converted\nfrom one type to another automatically.  When non-ASCII characters are\nintroduced, Python 2 starts throwing exceptions due to not knowing what encoding\nthe non-ASCII characters should be in.\n\n\n[local-e86eb8778aa79c96461909a6] Role: existing_behavior\nApplies to: lib.ansible.utils.vars.isidentifier\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:lib/ansible/utils/vars.py:233-262\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef isidentifier(ident):\n    \"\"\"\n    Determines, if string is valid Python identifier using the ast module.\n    Originally posted at: http://stackoverflow.com/a/29586366\n    \"\"\"\n\n    if not isinstance(ident, string_types):\n        return False\n\n    try:\n        root = ast.parse(ident)\n    except SyntaxError:\n        return False\n\n    if not isinstance(root, ast.Module):\n        return False\n\n    if len(root.body) != 1:\n        return False\n\n    if not isinstance(root.body[0], ast.Expr):\n        return False\n\n    if not isinstance(root.body[0].value, ast.Name):\n        return False\n\n    if root.body[0].value.id != ident:\n        return False\n\n    return True\n",
+    "units": [
+      {
+        "unit_id": "local-4c945e251edc8a24145544b1",
+        "repository": "ansible/ansible",
+        "source_revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+        "kind": "paragraph",
+        "applies_to": [
+          "docs/docsite/rst/user_guide/playbooks_variables.rst:21"
+        ],
+        "preconditions": [],
+        "statement": "Not all strings are valid Ansible variable names. A variable name must start with a letter, and can only include letters, numbers, and underscores. `Python keywords`_ are not valid variable names.\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "docs/docsite/rst/user_guide/playbooks_variables.rst",
+            "revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+            "line_start": 21,
+            "line_end": 21,
+            "exact_excerpt": "Not all strings are valid Ansible variable names. A variable name must start with a letter, and can only include letters, numbers, and underscores. `Python keywords`_ are not valid variable names.\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-4c945e251edc8a24145544b1] Role: documented_contract\nApplies to: docs/docsite/rst/user_guide/playbooks_variables.rst:21\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:docs/docsite/rst/user_guide/playbooks_variables.rst:21-21\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nNot all strings are valid Ansible variable names. A variable name must start with a letter, and can only include letters, numbers, and underscores. `Python keywords`_ are not valid variable names.\n"
+      },
+      {
+        "unit_id": "local-9337bdeb4e7dc83a952703ab",
+        "repository": "ansible/ansible",
+        "source_revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+        "kind": "paragraph",
+        "applies_to": [
+          "docs/docsite/rst/dev_guide/developing_python_3.rst:71"
+        ],
+        "preconditions": [],
+        "statement": "In Python 2, the two types for these (:class:`str <python:str>` for bytes and\n:func:`unicode <python:unicode>` for text) are often used interchangeably.  When dealing only\nwith ASCII characters, the strings can be combined, compared, and converted\nfrom one type to another automatically.  When non-ASCII characters are\nintroduced, Python 2 starts throwing exceptions due to not knowing what encoding\nthe non-ASCII characters should be in.\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "docs/docsite/rst/dev_guide/developing_python_3.rst",
+            "revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+            "line_start": 71,
+            "line_end": 76,
+            "exact_excerpt": "In Python 2, the two types for these (:class:`str <python:str>` for bytes and\n:func:`unicode <python:unicode>` for text) are often used interchangeably.  When dealing only\nwith ASCII characters, the strings can be combined, compared, and converted\nfrom one type to another automatically.  When non-ASCII characters are\nintroduced, Python 2 starts throwing exceptions due to not knowing what encoding\nthe non-ASCII characters should be in.\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-9337bdeb4e7dc83a952703ab] Role: documented_contract\nApplies to: docs/docsite/rst/dev_guide/developing_python_3.rst:71\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:docs/docsite/rst/dev_guide/developing_python_3.rst:71-76\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nIn Python 2, the two types for these (:class:`str <python:str>` for bytes and\n:func:`unicode <python:unicode>` for text) are often used interchangeably.  When dealing only\nwith ASCII characters, the strings can be combined, compared, and converted\nfrom one type to another automatically.  When non-ASCII characters are\nintroduced, Python 2 starts throwing exceptions due to not knowing what encoding\nthe non-ASCII characters should be in.\n"
+      },
+      {
+        "unit_id": "local-e86eb8778aa79c96461909a6",
+        "repository": "ansible/ansible",
+        "source_revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.utils.vars.isidentifier"
+        ],
+        "preconditions": [],
+        "statement": "def isidentifier(ident):\n    \"\"\"\n    Determines, if string is valid Python identifier using the ast module.\n    Originally posted at: http://stackoverflow.com/a/29586366\n    \"\"\"\n\n    if not isinstance(ident, string_types):\n        return False\n\n    try:\n        root = ast.parse(ident)\n    except SyntaxError:\n        return False\n\n    if not isinstance(root, ast.Module):\n        return False\n\n    if len(root.body) != 1:\n        return False\n\n    if not isinstance(root.body[0], ast.Expr):\n        return False\n\n    if not isinstance(root.body[0].value, ast.Name):\n        return False\n\n    if root.body[0].value.id != ident:\n        return False\n\n    return True\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/utils/vars.py",
+            "revision": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+            "line_start": 233,
+            "line_end": 262,
+            "exact_excerpt": "def isidentifier(ident):\n    \"\"\"\n    Determines, if string is valid Python identifier using the ast module.\n    Originally posted at: http://stackoverflow.com/a/29586366\n    \"\"\"\n\n    if not isinstance(ident, string_types):\n        return False\n\n    try:\n        root = ast.parse(ident)\n    except SyntaxError:\n        return False\n\n    if not isinstance(root, ast.Module):\n        return False\n\n    if len(root.body) != 1:\n        return False\n\n    if not isinstance(root.body[0], ast.Expr):\n        return False\n\n    if not isinstance(root.body[0].value, ast.Name):\n        return False\n\n    if root.body[0].value.id != ident:\n        return False\n\n    return True\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleOptionsError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.MutableMapping",
+          "ansible.module_utils.common._collections_compat.MutableSequence",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.string_types",
+          "ansible.parsing.splitter.parse_kv",
+          "ast",
+          "json.dumps",
+          "random",
+          "uuid"
+        ],
+        "serialized_payload": "[local-e86eb8778aa79c96461909a6] Role: existing_behavior\nApplies to: lib.ansible.utils.vars.isidentifier\nSource: ansible/ansible@9281148b623d4e2e8302778d91af3e84ab9579a9:lib/ansible/utils/vars.py:233-262\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef isidentifier(ident):\n    \"\"\"\n    Determines, if string is valid Python identifier using the ast module.\n    Originally posted at: http://stackoverflow.com/a/29586366\n    \"\"\"\n\n    if not isinstance(ident, string_types):\n        return False\n\n    try:\n        root = ast.parse(ident)\n    except SyntaxError:\n        return False\n\n    if not isinstance(root, ast.Module):\n        return False\n\n    if len(root.body) != 1:\n        return False\n\n    if not isinstance(root.body[0], ast.Expr):\n        return False\n\n    if not isinstance(root.body[0].value, ast.Name):\n        return False\n\n    if root.body[0].value.id != ident:\n        return False\n\n    return True\n"
+      }
+    ]
+  },
+  "468791d2d3405697741ded6ecb811730ede7d83e18d20ba2313c66c4931e7bf0": {
+    "payload": "Public maintenance knowledge. Verify applicability against the request and current code; quoted implementation is not proof of correctness.\n\n[local-913ea0a64604d91dd65fbdde] Role: existing_behavior\nApplies to: lib.ansible.plugins.filter.mathstuff.unique\nSource: ansible/ansible@709484969c8a4ffd74b839a673431a8c5caa6457:lib/ansible/plugins/filter/mathstuff.py:48-86\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n@environmentfilter\ndef unique(environment, a, case_sensitive=False, attribute=None):\n\n    def _do_fail(e):\n        if case_sensitive or attribute:\n            raise AnsibleFilterError(\"Jinja2's unique filter failed and we cannot fall back to Ansible's version \"\n                                     \"as it does not support the parameters supplied\", orig_exc=e)\n\n    error = e = None\n    try:\n        if HAS_UNIQUE:\n            c = do_unique(environment, a, case_sensitive=case_sensitive, attribute=attribute)\n            if isinstance(a, Hashable):\n                c = set(c)\n            else:\n                c = list(c)\n    except TypeError as e:\n        error = e\n        _do_fail(e)\n    except Exception as e:\n        error = e\n        _do_fail(e)\n        display.warning('Falling back to Ansible unique filter as Jinja2 one failed: %s' % to_text(e))\n\n    if not HAS_UNIQUE or error:\n\n        # handle Jinja2 specific attributes when using Ansible's version\n        if case_sensitive or attribute:\n            raise AnsibleFilterError(\"Ansible's unique filter does not support case_sensitive nor attribute parameters, \"\n                                     \"you need a newer version of Jinja2 that provides their version of the filter.\")\n\n        if isinstance(a, Hashable):\n            c = set(a)\n        else:\n            c = []\n            for x in a:\n                if x not in c:\n                    c.append(x)\n    return c\n\n\n[local-799aff2fb7ea734d99661f6e] Role: documented_contract\nApplies to: lib.ansible.plugins.filter.mathstuff.FilterModule.__doc__\nSource: ansible/ansible@709484969c8a4ffd74b839a673431a8c5caa6457:lib/ansible/plugins/filter/mathstuff.py:231-231\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    ''' Ansible math jinja2 filters '''\n\n\n[local-79aec51b058ccc1729436dbb] Role: existing_behavior\nApplies to: lib.ansible.plugins.filter.mathstuff.min\nSource: ansible/ansible@709484969c8a4ffd74b839a673431a8c5caa6457:lib/ansible/plugins/filter/mathstuff.py:126-128\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef min(a):\n    _min = __builtins__.get('min')\n    return _min(a)\n\n\n[local-aeca2eab56a6c7eb097dd66a-7f7ee5c6] Role: existing_behavior\nApplies to: lib.ansible.plugins.filter.mathstuff.unique._do_fail.branch_52\nSource: ansible/ansible@709484969c8a4ffd74b839a673431a8c5caa6457:lib/ansible/plugins/filter/mathstuff.py:51-54\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def _do_fail(e):\n        if case_sensitive or attribute:\n            raise AnsibleFilterError(\"Jinja2's unique filter failed and we cannot fall back to Ansible's version \"\n                                     \"as it does not support the parameters supplied\", orig_exc=e)\n",
+    "units": [
+      {
+        "unit_id": "local-913ea0a64604d91dd65fbdde",
+        "repository": "ansible/ansible",
+        "source_revision": "709484969c8a4ffd74b839a673431a8c5caa6457",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.plugins.filter.mathstuff.unique"
+        ],
+        "preconditions": [],
+        "statement": "@environmentfilter\ndef unique(environment, a, case_sensitive=False, attribute=None):\n\n    def _do_fail(e):\n        if case_sensitive or attribute:\n            raise AnsibleFilterError(\"Jinja2's unique filter failed and we cannot fall back to Ansible's version \"\n                                     \"as it does not support the parameters supplied\", orig_exc=e)\n\n    error = e = None\n    try:\n        if HAS_UNIQUE:\n            c = do_unique(environment, a, case_sensitive=case_sensitive, attribute=attribute)\n            if isinstance(a, Hashable):\n                c = set(c)\n            else:\n                c = list(c)\n    except TypeError as e:\n        error = e\n        _do_fail(e)\n    except Exception as e:\n        error = e\n        _do_fail(e)\n        display.warning('Falling back to Ansible unique filter as Jinja2 one failed: %s' % to_text(e))\n\n    if not HAS_UNIQUE or error:\n\n        # handle Jinja2 specific attributes when using Ansible's version\n        if case_sensitive or attribute:\n            raise AnsibleFilterError(\"Ansible's unique filter does not support case_sensitive nor attribute parameters, \"\n                                     \"you need a newer version of Jinja2 that provides their version of the filter.\")\n\n        if isinstance(a, Hashable):\n            c = set(a)\n        else:\n            c = []\n            for x in a:\n                if x not in c:\n                    c.append(x)\n    return c\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/filter/mathstuff.py",
+            "revision": "709484969c8a4ffd74b839a673431a8c5caa6457",
+            "line_start": 48,
+            "line_end": 86,
+            "exact_excerpt": "@environmentfilter\ndef unique(environment, a, case_sensitive=False, attribute=None):\n\n    def _do_fail(e):\n        if case_sensitive or attribute:\n            raise AnsibleFilterError(\"Jinja2's unique filter failed and we cannot fall back to Ansible's version \"\n                                     \"as it does not support the parameters supplied\", orig_exc=e)\n\n    error = e = None\n    try:\n        if HAS_UNIQUE:\n            c = do_unique(environment, a, case_sensitive=case_sensitive, attribute=attribute)\n            if isinstance(a, Hashable):\n                c = set(c)\n            else:\n                c = list(c)\n    except TypeError as e:\n        error = e\n        _do_fail(e)\n    except Exception as e:\n        error = e\n        _do_fail(e)\n        display.warning('Falling back to Ansible unique filter as Jinja2 one failed: %s' % to_text(e))\n\n    if not HAS_UNIQUE or error:\n\n        # handle Jinja2 specific attributes when using Ansible's version\n        if case_sensitive or attribute:\n            raise AnsibleFilterError(\"Ansible's unique filter does not support case_sensitive nor attribute parameters, \"\n                                     \"you need a newer version of Jinja2 that provides their version of the filter.\")\n\n        if isinstance(a, Hashable):\n            c = set(a)\n        else:\n            c = []\n            for x in a:\n                if x not in c:\n                    c.append(x)\n    return c\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleFilterError",
+          "ansible.errors.AnsibleFilterTypeError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.Hashable",
+          "ansible.module_utils.common._collections_compat.Iterable",
+          "ansible.module_utils.common._collections_compat.Mapping",
+          "ansible.module_utils.common.text.formatters",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.moves.zip",
+          "ansible.module_utils.six.moves.zip_longest",
+          "ansible.module_utils.six.text_type",
+          "ansible.utils.display.Display",
+          "itertools",
+          "jinja2.filters.environmentfilter",
+          "math"
+        ],
+        "serialized_payload": "[local-913ea0a64604d91dd65fbdde] Role: existing_behavior\nApplies to: lib.ansible.plugins.filter.mathstuff.unique\nSource: ansible/ansible@709484969c8a4ffd74b839a673431a8c5caa6457:lib/ansible/plugins/filter/mathstuff.py:48-86\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n@environmentfilter\ndef unique(environment, a, case_sensitive=False, attribute=None):\n\n    def _do_fail(e):\n        if case_sensitive or attribute:\n            raise AnsibleFilterError(\"Jinja2's unique filter failed and we cannot fall back to Ansible's version \"\n                                     \"as it does not support the parameters supplied\", orig_exc=e)\n\n    error = e = None\n    try:\n        if HAS_UNIQUE:\n            c = do_unique(environment, a, case_sensitive=case_sensitive, attribute=attribute)\n            if isinstance(a, Hashable):\n                c = set(c)\n            else:\n                c = list(c)\n    except TypeError as e:\n        error = e\n        _do_fail(e)\n    except Exception as e:\n        error = e\n        _do_fail(e)\n        display.warning('Falling back to Ansible unique filter as Jinja2 one failed: %s' % to_text(e))\n\n    if not HAS_UNIQUE or error:\n\n        # handle Jinja2 specific attributes when using Ansible's version\n        if case_sensitive or attribute:\n            raise AnsibleFilterError(\"Ansible's unique filter does not support case_sensitive nor attribute parameters, \"\n                                     \"you need a newer version of Jinja2 that provides their version of the filter.\")\n\n        if isinstance(a, Hashable):\n            c = set(a)\n        else:\n            c = []\n            for x in a:\n                if x not in c:\n                    c.append(x)\n    return c\n"
+      },
+      {
+        "unit_id": "local-799aff2fb7ea734d99661f6e",
+        "repository": "ansible/ansible",
+        "source_revision": "709484969c8a4ffd74b839a673431a8c5caa6457",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.plugins.filter.mathstuff.FilterModule.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "    ''' Ansible math jinja2 filters '''\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/filter/mathstuff.py",
+            "revision": "709484969c8a4ffd74b839a673431a8c5caa6457",
+            "line_start": 231,
+            "line_end": 231,
+            "exact_excerpt": "    ''' Ansible math jinja2 filters '''\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleFilterError",
+          "ansible.errors.AnsibleFilterTypeError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.Hashable",
+          "ansible.module_utils.common._collections_compat.Iterable",
+          "ansible.module_utils.common._collections_compat.Mapping",
+          "ansible.module_utils.common.text.formatters",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.moves.zip",
+          "ansible.module_utils.six.moves.zip_longest",
+          "ansible.module_utils.six.text_type",
+          "ansible.utils.display.Display",
+          "itertools",
+          "jinja2.filters.environmentfilter",
+          "math"
+        ],
+        "serialized_payload": "[local-799aff2fb7ea734d99661f6e] Role: documented_contract\nApplies to: lib.ansible.plugins.filter.mathstuff.FilterModule.__doc__\nSource: ansible/ansible@709484969c8a4ffd74b839a673431a8c5caa6457:lib/ansible/plugins/filter/mathstuff.py:231-231\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    ''' Ansible math jinja2 filters '''\n"
+      },
+      {
+        "unit_id": "local-79aec51b058ccc1729436dbb",
+        "repository": "ansible/ansible",
+        "source_revision": "709484969c8a4ffd74b839a673431a8c5caa6457",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.plugins.filter.mathstuff.min"
+        ],
+        "preconditions": [],
+        "statement": "def min(a):\n    _min = __builtins__.get('min')\n    return _min(a)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/filter/mathstuff.py",
+            "revision": "709484969c8a4ffd74b839a673431a8c5caa6457",
+            "line_start": 126,
+            "line_end": 128,
+            "exact_excerpt": "def min(a):\n    _min = __builtins__.get('min')\n    return _min(a)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleFilterError",
+          "ansible.errors.AnsibleFilterTypeError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.Hashable",
+          "ansible.module_utils.common._collections_compat.Iterable",
+          "ansible.module_utils.common._collections_compat.Mapping",
+          "ansible.module_utils.common.text.formatters",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.moves.zip",
+          "ansible.module_utils.six.moves.zip_longest",
+          "ansible.module_utils.six.text_type",
+          "ansible.utils.display.Display",
+          "itertools",
+          "jinja2.filters.environmentfilter",
+          "math"
+        ],
+        "serialized_payload": "[local-79aec51b058ccc1729436dbb] Role: existing_behavior\nApplies to: lib.ansible.plugins.filter.mathstuff.min\nSource: ansible/ansible@709484969c8a4ffd74b839a673431a8c5caa6457:lib/ansible/plugins/filter/mathstuff.py:126-128\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\ndef min(a):\n    _min = __builtins__.get('min')\n    return _min(a)\n"
+      },
+      {
+        "unit_id": "local-aeca2eab56a6c7eb097dd66a-7f7ee5c6",
+        "repository": "ansible/ansible",
+        "source_revision": "709484969c8a4ffd74b839a673431a8c5caa6457",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.plugins.filter.mathstuff.unique._do_fail.branch_52"
+        ],
+        "preconditions": [],
+        "statement": "    def _do_fail(e):\n        if case_sensitive or attribute:\n            raise AnsibleFilterError(\"Jinja2's unique filter failed and we cannot fall back to Ansible's version \"\n                                     \"as it does not support the parameters supplied\", orig_exc=e)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/filter/mathstuff.py",
+            "revision": "709484969c8a4ffd74b839a673431a8c5caa6457",
+            "line_start": 51,
+            "line_end": 54,
+            "exact_excerpt": "    def _do_fail(e):\n        if case_sensitive or attribute:\n            raise AnsibleFilterError(\"Jinja2's unique filter failed and we cannot fall back to Ansible's version \"\n                                     \"as it does not support the parameters supplied\", orig_exc=e)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.errors.AnsibleFilterError",
+          "ansible.errors.AnsibleFilterTypeError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.common._collections_compat.Hashable",
+          "ansible.module_utils.common._collections_compat.Iterable",
+          "ansible.module_utils.common._collections_compat.Mapping",
+          "ansible.module_utils.common.text.formatters",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.moves.zip",
+          "ansible.module_utils.six.moves.zip_longest",
+          "ansible.module_utils.six.text_type",
+          "ansible.utils.display.Display",
+          "itertools",
+          "jinja2.filters.environmentfilter",
+          "math"
+        ],
+        "serialized_payload": "[local-aeca2eab56a6c7eb097dd66a-7f7ee5c6] Role: existing_behavior\nApplies to: lib.ansible.plugins.filter.mathstuff.unique._do_fail.branch_52\nSource: ansible/ansible@709484969c8a4ffd74b839a673431a8c5caa6457:lib/ansible/plugins/filter/mathstuff.py:51-54\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def _do_fail(e):\n        if case_sensitive or attribute:\n            raise AnsibleFilterError(\"Jinja2's unique filter failed and we cannot fall back to Ansible's version \"\n                                     \"as it does not support the parameters supplied\", orig_exc=e)\n"
+      }
+    ]
+  },
+  "d7e52b1b62f768d9c1afc40d6525920d522744254266dbb8f6a84f44061d4a61": {
+    "payload": "Public maintenance knowledge. Verify applicability against the request and current code; quoted implementation is not proof of correctness.\n\n[local-af001a9639376b614f883a11] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.load_from_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:80-104\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n\n\n[local-c836e0046a19fde732f53558] Role: documented_contract\nApplies to: lib.ansible.plugins.lookup.first_found.DOCUMENTATION\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/plugins/lookup/first_found.py:6-50\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nDOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n\n\n[local-a93822d89a48011530d203e8] Role: existing_behavior\nApplies to: test.units.mock.loader.DictDataLoader.load_from_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:test/units/mock/loader.py:38-43\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, path, cache=True, unsafe=False):\n        data = None\n        path = to_text(path)\n        if path in self._file_mapping:\n            data = self.load(self._file_mapping[path], path)\n        return data\n",
+    "units": [
+      {
+        "unit_id": "local-af001a9639376b614f883a11",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader.load_from_file"
+        ],
+        "preconditions": [],
+        "statement": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 80,
+            "line_end": 104,
+            "exact_excerpt": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-af001a9639376b614f883a11] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.load_from_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:80-104\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+      },
+      {
+        "unit_id": "local-c836e0046a19fde732f53558",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "assignment",
+        "applies_to": [
+          "lib.ansible.plugins.lookup.first_found.DOCUMENTATION"
+        ],
+        "preconditions": [],
+        "statement": "DOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/lookup/first_found.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 6,
+            "line_end": 50,
+            "exact_excerpt": "DOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.errors.AnsibleLookupError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.module_utils.six.string_types",
+          "ansible.plugins.lookup.LookupBase",
+          "collections.abc.Mapping",
+          "collections.abc.Sequence",
+          "jinja2.exceptions.UndefinedError",
+          "os",
+          "re"
+        ],
+        "serialized_payload": "[local-c836e0046a19fde732f53558] Role: documented_contract\nApplies to: lib.ansible.plugins.lookup.first_found.DOCUMENTATION\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/plugins/lookup/first_found.py:6-50\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nDOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n"
+      },
+      {
+        "unit_id": "local-a93822d89a48011530d203e8",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "function",
+        "applies_to": [
+          "test.units.mock.loader.DictDataLoader.load_from_file"
+        ],
+        "preconditions": [],
+        "statement": "    def load_from_file(self, path, cache=True, unsafe=False):\n        data = None\n        path = to_text(path)\n        if path in self._file_mapping:\n            data = self.load(self._file_mapping[path], path)\n        return data\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "test/units/mock/loader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 38,
+            "line_end": 43,
+            "exact_excerpt": "    def load_from_file(self, path, cache=True, unsafe=False):\n        data = None\n        path = to_text(path)\n        if path in self._file_mapping:\n            data = self.load(self._file_mapping[path], path)\n        return data\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.parsing.dataloader.DataLoader",
+          "os"
+        ],
+        "serialized_payload": "[local-a93822d89a48011530d203e8] Role: existing_behavior\nApplies to: test.units.mock.loader.DictDataLoader.load_from_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:test/units/mock/loader.py:38-43\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, path, cache=True, unsafe=False):\n        data = None\n        path = to_text(path)\n        if path in self._file_mapping:\n            data = self.load(self._file_mapping[path], path)\n        return data\n"
+      }
+    ]
+  },
+  "71ab7046ce4f8d118db46e4dd14151cbdc93c8ce90f7fd98c7b5079b93eb1c6c": {
+    "payload": "Public maintenance knowledge. Verify applicability against the request and current code; quoted implementation is not proof of correctness.\n\n[local-af001a9639376b614f883a11] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.load_from_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:80-104\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n\n\n[local-c836e0046a19fde732f53558] Role: documented_contract\nApplies to: lib.ansible.plugins.lookup.first_found.DOCUMENTATION\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/plugins/lookup/first_found.py:6-50\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nDOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n",
+    "units": [
+      {
+        "unit_id": "local-af001a9639376b614f883a11",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.parsing.dataloader.DataLoader.load_from_file"
+        ],
+        "preconditions": [],
+        "statement": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/parsing/dataloader.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 80,
+            "line_end": 104,
+            "exact_excerpt": "    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.constants",
+          "ansible.errors.AnsibleFileNotFound",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils.basic.is_executable",
+          "ansible.module_utils.common.text.converters.to_bytes",
+          "ansible.module_utils.common.text.converters.to_native",
+          "ansible.module_utils.common.text.converters.to_text",
+          "ansible.module_utils.six.binary_type",
+          "ansible.module_utils.six.text_type",
+          "ansible.parsing.quoting.unquote",
+          "ansible.parsing.utils.yaml.from_yaml",
+          "ansible.parsing.vault.PromptVaultSecret",
+          "ansible.parsing.vault.VaultLib",
+          "ansible.parsing.vault.b_HEADER",
+          "ansible.parsing.vault.is_encrypted",
+          "ansible.parsing.vault.is_encrypted_file",
+          "ansible.parsing.vault.parse_vaulttext_envelope",
+          "ansible.utils.display.Display",
+          "ansible.utils.path.unfrackpath",
+          "copy",
+          "os",
+          "re",
+          "tempfile",
+          "typing"
+        ],
+        "serialized_payload": "[local-af001a9639376b614f883a11] Role: existing_behavior\nApplies to: lib.ansible.parsing.dataloader.DataLoader.load_from_file\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/parsing/dataloader.py:80-104\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def load_from_file(self, file_name: str, cache: bool = True, unsafe: bool = False, json_only: bool = False) -> t.Any:\n        ''' Loads data from a file, which can contain either JSON or YAML.  '''\n\n        file_name = self.path_dwim(file_name)\n        display.debug(\"Loading data from %s\" % file_name)\n\n        # if the file has already been read in and cached, we'll\n        # return those results to avoid more file/vault operations\n        if cache and file_name in self._FILE_CACHE:\n            parsed_data = self._FILE_CACHE[file_name]\n        else:\n            # read the file contents and load the data structure from them\n            (b_file_data, show_content) = self._get_file_contents(file_name)\n\n            file_data = to_text(b_file_data, errors='surrogate_or_strict')\n            parsed_data = self.load(data=file_data, file_name=file_name, show_content=show_content, json_only=json_only)\n\n            # cache the file contents for next time\n            self._FILE_CACHE[file_name] = parsed_data\n\n        if unsafe:\n            return parsed_data\n        else:\n            # return a deep copy here, so the cache is not affected\n            return copy.deepcopy(parsed_data)\n"
+      },
+      {
+        "unit_id": "local-c836e0046a19fde732f53558",
+        "repository": "ansible/ansible",
+        "source_revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+        "kind": "assignment",
+        "applies_to": [
+          "lib.ansible.plugins.lookup.first_found.DOCUMENTATION"
+        ],
+        "preconditions": [],
+        "statement": "DOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/plugins/lookup/first_found.py",
+            "revision": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+            "line_start": 6,
+            "line_end": 50,
+            "exact_excerpt": "DOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.annotations",
+          "ansible.errors.AnsibleLookupError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.module_utils.six.string_types",
+          "ansible.plugins.lookup.LookupBase",
+          "collections.abc.Mapping",
+          "collections.abc.Sequence",
+          "jinja2.exceptions.UndefinedError",
+          "os",
+          "re"
+        ],
+        "serialized_payload": "[local-c836e0046a19fde732f53558] Role: documented_contract\nApplies to: lib.ansible.plugins.lookup.first_found.DOCUMENTATION\nSource: ansible/ansible@92df66480613d0f3c1f11ab27146e3162d2a5bd5:lib/ansible/plugins/lookup/first_found.py:6-50\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\nDOCUMENTATION = \"\"\"\n    name: first_found\n    author: Seth Vidal (!UNKNOWN) <skvidal@fedoraproject.org>\n    version_added: historical\n    short_description: return first file found from list\n    description:\n      - This lookup checks a list of files and paths and returns the full path to the first combination found.\n      - As all lookups, when fed relative paths it will try use the current task's location first and go up the chain\n        to the containing locations of role / play / include and so on.\n      - The list of files has precedence over the paths searched.\n        For example, A task in a role has a 'file1' in the play's relative path, this will be used, 'file2' in role's relative path will not.\n      - Either a list of files O(_terms) or a key O(files) with a list of files is required for this plugin to operate.\n    notes:\n      - This lookup can be used in 'dual mode', either passing a list of file names or a dictionary that has O(files) and O(paths).\n    options:\n      _terms:\n        description: A list of file names.\n      files:\n        description: A list of file names.\n        type: list\n        elements: string\n        default: []\n      paths:\n        description: A list of paths in which to look for the files.\n        type: list\n        elements: string\n        default: []\n      skip:\n        type: boolean\n        default: False\n        description:\n          - When V(True), return an empty list when no files are matched.\n          - This is useful when used with C(with_first_found), as an empty list return to C(with_) calls\n            causes the calling task to be skipped.\n          - When used as a template via C(lookup) or C(query), setting O(skip=True) will *not* cause the task to skip.\n            Tasks must handle the empty list return from the template.\n          - When V(False) and C(lookup) or C(query) specifies O(ignore:errors='ignore') all errors (including no file found,\n            but potentially others) return an empty string or an empty list respectively.\n          - When V(True) and C(lookup) or C(query) specifies O(ignore:errors='ignore'), no file found will return an empty\n            list and other potential errors return an empty string or empty list depending on the template call\n            (in other words return values of C(lookup) vs C(query)).\n    seealso:\n      - ref: playbook_task_paths\n        description: Search paths used for relative paths/files.\n\"\"\"\n"
+      }
+    ]
+  },
+  "d30189b497b3b60413cbb6eba45cd1544bd435b452bb2852b946e3fe704fb7b0": {
+    "payload": "Public maintenance knowledge. Verify applicability against the request and current code; quoted implementation is not proof of correctness.\n\n[local-d81d35e5b8f1fbbbe0236b75-12c576c4] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.load.branch_106\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:104-112\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n\n\n[local-b004f844c9bd6572ec2e3250-60315b76] Role: existing_behavior\nApplies to: lib.ansible.playbook.base.FieldAttributeBase.post_validate.block_407\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/base.py:397-466\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def post_validate(self, templar):\n        '''\n        we can't tell that everything is of the right type until we have\n        all the variables.  Run basic types (from isa) as well as\n        any _post_validate_<foo> functions.\n        '''\n\n        # save the omit value for later checking\n        omit_value = templar.available_variables.get('omit')\n\n        for (name, attribute) in iteritems(self._valid_attrs):\n\n            if attribute.static:\n                value = getattr(self, name)\n\n                # we don't template 'vars' but allow template as values for later use\n                if name not in ('vars',) and templar.is_template(value):\n                    display.warning('\"%s\" is not templatable, but we found: %s, '\n                                    'it will not be templated and will be used \"as is\".' % (name, value))\n                continue\n\n            if getattr(self, name) is None:\n                if not attribute.required:\n                    continue\n                else:\n                    raise AnsibleParserError(\"the field '%s' is required but was not set\" % name)\n            elif not attribute.always_post_validate and self.__class__.__name__ not in ('Task', 'Handler', 'PlayContext'):\n                # Intermediate objects like Play() won't have their fields validated by\n                # default, as their values are often inherited by other objects and validated\n                # later, so we don't want them to fail out early\n                continue\n\n            try:\n                # Run the post-validator if present. These methods are responsible for\n                # using the given templar to template the values, if required.\n                method = getattr(self, '_post_validate_%s' % name, None)\n                if method:\n                    value = method(attribute, getattr(self, name), templar)\n                elif attribute.isa == 'class':\n                    value = getattr(self, name)\n                else:\n                    # if the attribute contains a variable, template it now\n                    value = templar.template(getattr(self, name))\n\n                # if this evaluated to the omit value, set the value back to\n                # the default specified in the FieldAttribute and move on\n                if omit_value is not None and value == omit_value:\n                    if callable(attribute.default):\n                        setattr(self, name, attribute.default())\n                    else:\n                        setattr(self, name, attribute.default)\n                    continue\n\n                # and make sure the attribute is of the type it should be\n                if value is not None:\n                    value = self.get_validated_value(name, attribute, value, templar)\n\n                # and assign the massaged value back to the attribute field\n                setattr(self, name, value)\n            except (TypeError, ValueError) as e:\n                value = getattr(self, name)\n                raise AnsibleParserError(\"the field '%s' has an invalid value (%s), and could not be converted to an %s.\"\n                                         \"The error was: %s\" % (name, value, attribute.isa, e), obj=self.get_ds(), orig_exc=e)\n            except (AnsibleUndefinedVariable, UndefinedError) as e:\n                if templar._fail_on_undefined_errors and name != 'name':\n                    if name == 'args':\n                        msg = \"The task includes an option with an undefined variable. The error was: %s\" % (to_native(e))\n                    else:\n                        msg = \"The field '%s' has an invalid value, which includes an undefined variable. The error was: %s\" % (name, to_native(e))\n                    raise AnsibleParserError(msg, obj=self.get_ds(), orig_exc=e)\n",
+    "units": [
+      {
+        "unit_id": "local-d81d35e5b8f1fbbbe0236b75-12c576c4",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.playbook.play.Play.load.branch_106"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 104,
+            "line_end": 112,
+            "exact_excerpt": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils.six.string_types",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.collectionsearch.CollectionSearch",
+          "ansible.playbook.helpers.load_list_of_blocks",
+          "ansible.playbook.helpers.load_list_of_roles",
+          "ansible.playbook.role.Role",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.utils.display.Display",
+          "ansible.vars.manager.preprocess_vars"
+        ],
+        "serialized_payload": "[local-d81d35e5b8f1fbbbe0236b75-12c576c4] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.load.branch_106\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:104-112\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n"
+      },
+      {
+        "unit_id": "local-b004f844c9bd6572ec2e3250-60315b76",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "block",
+        "applies_to": [
+          "lib.ansible.playbook.base.FieldAttributeBase.post_validate.block_407"
+        ],
+        "preconditions": [],
+        "statement": "    def post_validate(self, templar):\n        '''\n        we can't tell that everything is of the right type until we have\n        all the variables.  Run basic types (from isa) as well as\n        any _post_validate_<foo> functions.\n        '''\n\n        # save the omit value for later checking\n        omit_value = templar.available_variables.get('omit')\n\n        for (name, attribute) in iteritems(self._valid_attrs):\n\n            if attribute.static:\n                value = getattr(self, name)\n\n                # we don't template 'vars' but allow template as values for later use\n                if name not in ('vars',) and templar.is_template(value):\n                    display.warning('\"%s\" is not templatable, but we found: %s, '\n                                    'it will not be templated and will be used \"as is\".' % (name, value))\n                continue\n\n            if getattr(self, name) is None:\n                if not attribute.required:\n                    continue\n                else:\n                    raise AnsibleParserError(\"the field '%s' is required but was not set\" % name)\n            elif not attribute.always_post_validate and self.__class__.__name__ not in ('Task', 'Handler', 'PlayContext'):\n                # Intermediate objects like Play() won't have their fields validated by\n                # default, as their values are often inherited by other objects and validated\n                # later, so we don't want them to fail out early\n                continue\n\n            try:\n                # Run the post-validator if present. These methods are responsible for\n                # using the given templar to template the values, if required.\n                method = getattr(self, '_post_validate_%s' % name, None)\n                if method:\n                    value = method(attribute, getattr(self, name), templar)\n                elif attribute.isa == 'class':\n                    value = getattr(self, name)\n                else:\n                    # if the attribute contains a variable, template it now\n                    value = templar.template(getattr(self, name))\n\n                # if this evaluated to the omit value, set the value back to\n                # the default specified in the FieldAttribute and move on\n                if omit_value is not None and value == omit_value:\n                    if callable(attribute.default):\n                        setattr(self, name, attribute.default())\n                    else:\n                        setattr(self, name, attribute.default)\n                    continue\n\n                # and make sure the attribute is of the type it should be\n                if value is not None:\n                    value = self.get_validated_value(name, attribute, value, templar)\n\n                # and assign the massaged value back to the attribute field\n                setattr(self, name, value)\n            except (TypeError, ValueError) as e:\n                value = getattr(self, name)\n                raise AnsibleParserError(\"the field '%s' has an invalid value (%s), and could not be converted to an %s.\"\n                                         \"The error was: %s\" % (name, value, attribute.isa, e), obj=self.get_ds(), orig_exc=e)\n            except (AnsibleUndefinedVariable, UndefinedError) as e:\n                if templar._fail_on_undefined_errors and name != 'name':\n                    if name == 'args':\n                        msg = \"The task includes an option with an undefined variable. The error was: %s\" % (to_native(e))\n                    else:\n                        msg = \"The field '%s' has an invalid value, which includes an undefined variable. The error was: %s\" % (name, to_native(e))\n                    raise AnsibleParserError(msg, obj=self.get_ds(), orig_exc=e)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/base.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 397,
+            "line_end": 466,
+            "exact_excerpt": "    def post_validate(self, templar):\n        '''\n        we can't tell that everything is of the right type until we have\n        all the variables.  Run basic types (from isa) as well as\n        any _post_validate_<foo> functions.\n        '''\n\n        # save the omit value for later checking\n        omit_value = templar.available_variables.get('omit')\n\n        for (name, attribute) in iteritems(self._valid_attrs):\n\n            if attribute.static:\n                value = getattr(self, name)\n\n                # we don't template 'vars' but allow template as values for later use\n                if name not in ('vars',) and templar.is_template(value):\n                    display.warning('\"%s\" is not templatable, but we found: %s, '\n                                    'it will not be templated and will be used \"as is\".' % (name, value))\n                continue\n\n            if getattr(self, name) is None:\n                if not attribute.required:\n                    continue\n                else:\n                    raise AnsibleParserError(\"the field '%s' is required but was not set\" % name)\n            elif not attribute.always_post_validate and self.__class__.__name__ not in ('Task', 'Handler', 'PlayContext'):\n                # Intermediate objects like Play() won't have their fields validated by\n                # default, as their values are often inherited by other objects and validated\n                # later, so we don't want them to fail out early\n                continue\n\n            try:\n                # Run the post-validator if present. These methods are responsible for\n                # using the given templar to template the values, if required.\n                method = getattr(self, '_post_validate_%s' % name, None)\n                if method:\n                    value = method(attribute, getattr(self, name), templar)\n                elif attribute.isa == 'class':\n                    value = getattr(self, name)\n                else:\n                    # if the attribute contains a variable, template it now\n                    value = templar.template(getattr(self, name))\n\n                # if this evaluated to the omit value, set the value back to\n                # the default specified in the FieldAttribute and move on\n                if omit_value is not None and value == omit_value:\n                    if callable(attribute.default):\n                        setattr(self, name, attribute.default())\n                    else:\n                        setattr(self, name, attribute.default)\n                    continue\n\n                # and make sure the attribute is of the type it should be\n                if value is not None:\n                    value = self.get_validated_value(name, attribute, value, templar)\n\n                # and assign the massaged value back to the attribute field\n                setattr(self, name, value)\n            except (TypeError, ValueError) as e:\n                value = getattr(self, name)\n                raise AnsibleParserError(\"the field '%s' has an invalid value (%s), and could not be converted to an %s.\"\n                                         \"The error was: %s\" % (name, value, attribute.isa, e), obj=self.get_ds(), orig_exc=e)\n            except (AnsibleUndefinedVariable, UndefinedError) as e:\n                if templar._fail_on_undefined_errors and name != 'name':\n                    if name == 'args':\n                        msg = \"The task includes an option with an undefined variable. The error was: %s\" % (to_native(e))\n                    else:\n                        msg = \"The field '%s' has an invalid value, which includes an undefined variable. The error was: %s\" % (name, to_native(e))\n                    raise AnsibleParserError(msg, obj=self.get_ds(), orig_exc=e)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.errors.AnsibleUndefinedVariable",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils._text.to_text",
+          "ansible.module_utils.parsing.convert_bool.boolean",
+          "ansible.module_utils.six.iteritems",
+          "ansible.module_utils.six.string_types",
+          "ansible.module_utils.six.with_metaclass",
+          "ansible.parsing.dataloader.DataLoader",
+          "ansible.playbook.attribute.Attribute",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.utils.display.Display",
+          "ansible.utils.sentinel.Sentinel",
+          "ansible.utils.vars.combine_vars",
+          "ansible.utils.vars.get_unique_id",
+          "ansible.utils.vars.isidentifier",
+          "copy.copy",
+          "functools.partial",
+          "itertools",
+          "jinja2.exceptions.UndefinedError",
+          "operator"
+        ],
+        "serialized_payload": "[local-b004f844c9bd6572ec2e3250-60315b76] Role: existing_behavior\nApplies to: lib.ansible.playbook.base.FieldAttributeBase.post_validate.block_407\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/base.py:397-466\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    def post_validate(self, templar):\n        '''\n        we can't tell that everything is of the right type until we have\n        all the variables.  Run basic types (from isa) as well as\n        any _post_validate_<foo> functions.\n        '''\n\n        # save the omit value for later checking\n        omit_value = templar.available_variables.get('omit')\n\n        for (name, attribute) in iteritems(self._valid_attrs):\n\n            if attribute.static:\n                value = getattr(self, name)\n\n                # we don't template 'vars' but allow template as values for later use\n                if name not in ('vars',) and templar.is_template(value):\n                    display.warning('\"%s\" is not templatable, but we found: %s, '\n                                    'it will not be templated and will be used \"as is\".' % (name, value))\n                continue\n\n            if getattr(self, name) is None:\n                if not attribute.required:\n                    continue\n                else:\n                    raise AnsibleParserError(\"the field '%s' is required but was not set\" % name)\n            elif not attribute.always_post_validate and self.__class__.__name__ not in ('Task', 'Handler', 'PlayContext'):\n                # Intermediate objects like Play() won't have their fields validated by\n                # default, as their values are often inherited by other objects and validated\n                # later, so we don't want them to fail out early\n                continue\n\n            try:\n                # Run the post-validator if present. These methods are responsible for\n                # using the given templar to template the values, if required.\n                method = getattr(self, '_post_validate_%s' % name, None)\n                if method:\n                    value = method(attribute, getattr(self, name), templar)\n                elif attribute.isa == 'class':\n                    value = getattr(self, name)\n                else:\n                    # if the attribute contains a variable, template it now\n                    value = templar.template(getattr(self, name))\n\n                # if this evaluated to the omit value, set the value back to\n                # the default specified in the FieldAttribute and move on\n                if omit_value is not None and value == omit_value:\n                    if callable(attribute.default):\n                        setattr(self, name, attribute.default())\n                    else:\n                        setattr(self, name, attribute.default)\n                    continue\n\n                # and make sure the attribute is of the type it should be\n                if value is not None:\n                    value = self.get_validated_value(name, attribute, value, templar)\n\n                # and assign the massaged value back to the attribute field\n                setattr(self, name, value)\n            except (TypeError, ValueError) as e:\n                value = getattr(self, name)\n                raise AnsibleParserError(\"the field '%s' has an invalid value (%s), and could not be converted to an %s.\"\n                                         \"The error was: %s\" % (name, value, attribute.isa, e), obj=self.get_ds(), orig_exc=e)\n            except (AnsibleUndefinedVariable, UndefinedError) as e:\n                if templar._fail_on_undefined_errors and name != 'name':\n                    if name == 'args':\n                        msg = \"The task includes an option with an undefined variable. The error was: %s\" % (to_native(e))\n                    else:\n                        msg = \"The field '%s' has an invalid value, which includes an undefined variable. The error was: %s\" % (name, to_native(e))\n                    raise AnsibleParserError(msg, obj=self.get_ds(), orig_exc=e)\n"
+      }
+    ]
+  },
+  "2084601ef6345ed0090a33f3f5467ba8a749d1594ffb7967ce8765e3558feb80": {
+    "payload": "Public maintenance knowledge. Verify applicability against the request and current code; quoted implementation is not proof of correctness.\n\n[local-9ccda5d5cd517b3eb3bacb64] Role: documented_contract\nApplies to: lib.ansible.playbook.attribute.Attribute.__init__.__doc__\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/attribute.py:47-78\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n\n\n[local-bde3c614b500035aa82b13d7] Role: public_test_example\nApplies to: test/integration/targets/playbook/runme.sh:33\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:test/integration/targets/playbook/runme.sh:33-38\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n# test that play errors if len(hosts) == 0\necho \"EXPECTED ERROR: Ensure we fail properly if a play has 0 hosts.\"\nset +e\nresult=\"$(ansible-playbook -i ../../inventory empty_hosts.yml -v \"$@\" 2>&1)\"\nset -e\ngrep -q \"ERROR! Hosts list cannot be empty - please check your playbook\" <<< \"$result\"\n\n\n[local-ffa2a9d753d9b007b1d846f4] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.load\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:104-116\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n        p = Play()\n        if vars:\n            p.vars = vars.copy()\n        return p.load_data(data, variable_manager=variable_manager, loader=loader)\n",
+    "units": [
+      {
+        "unit_id": "local-9ccda5d5cd517b3eb3bacb64",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.playbook.attribute.Attribute.__init__.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/attribute.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 47,
+            "line_end": 78,
+            "exact_excerpt": "        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "copy.copy",
+          "copy.deepcopy"
+        ],
+        "serialized_payload": "[local-9ccda5d5cd517b3eb3bacb64] Role: documented_contract\nApplies to: lib.ansible.playbook.attribute.Attribute.__init__.__doc__\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/attribute.py:47-78\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n"
+      },
+      {
+        "unit_id": "local-bde3c614b500035aa82b13d7",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "paragraph",
+        "applies_to": [
+          "test/integration/targets/playbook/runme.sh:33"
+        ],
+        "preconditions": [],
+        "statement": "# test that play errors if len(hosts) == 0\necho \"EXPECTED ERROR: Ensure we fail properly if a play has 0 hosts.\"\nset +e\nresult=\"$(ansible-playbook -i ../../inventory empty_hosts.yml -v \"$@\" 2>&1)\"\nset -e\ngrep -q \"ERROR! Hosts list cannot be empty - please check your playbook\" <<< \"$result\"\n",
+        "verification_pattern": "# test that play errors if len(hosts) == 0\necho \"EXPECTED ERROR: Ensure we fail properly if a play has 0 hosts.\"\nset +e\nresult=\"$(ansible-playbook -i ../../inventory empty_hosts.yml -v \"$@\" 2>&1)\"\nset -e\ngrep -q \"ERROR! Hosts list cannot be empty - please check your playbook\" <<< \"$result\"\n",
+        "source_spans": [
+          {
+            "path_or_public_url": "test/integration/targets/playbook/runme.sh",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 33,
+            "line_end": 38,
+            "exact_excerpt": "# test that play errors if len(hosts) == 0\necho \"EXPECTED ERROR: Ensure we fail properly if a play has 0 hosts.\"\nset +e\nresult=\"$(ansible-playbook -i ../../inventory empty_hosts.yml -v \"$@\" 2>&1)\"\nset -e\ngrep -q \"ERROR! Hosts list cannot be empty - please check your playbook\" <<< \"$result\"\n"
+          }
+        ],
+        "claim_role": "public_test_example",
+        "version_status": "supported",
+        "dependencies": [],
+        "serialized_payload": "[local-bde3c614b500035aa82b13d7] Role: public_test_example\nApplies to: test/integration/targets/playbook/runme.sh:33\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:test/integration/targets/playbook/runme.sh:33-38\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n# test that play errors if len(hosts) == 0\necho \"EXPECTED ERROR: Ensure we fail properly if a play has 0 hosts.\"\nset +e\nresult=\"$(ansible-playbook -i ../../inventory empty_hosts.yml -v \"$@\" 2>&1)\"\nset -e\ngrep -q \"ERROR! Hosts list cannot be empty - please check your playbook\" <<< \"$result\"\n"
+      },
+      {
+        "unit_id": "local-ffa2a9d753d9b007b1d846f4",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "function",
+        "applies_to": [
+          "lib.ansible.playbook.play.Play.load"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n        p = Play()\n        if vars:\n            p.vars = vars.copy()\n        return p.load_data(data, variable_manager=variable_manager, loader=loader)\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 104,
+            "line_end": 116,
+            "exact_excerpt": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n        p = Play()\n        if vars:\n            p.vars = vars.copy()\n        return p.load_data(data, variable_manager=variable_manager, loader=loader)\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils.six.string_types",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.collectionsearch.CollectionSearch",
+          "ansible.playbook.helpers.load_list_of_blocks",
+          "ansible.playbook.helpers.load_list_of_roles",
+          "ansible.playbook.role.Role",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.utils.display.Display",
+          "ansible.vars.manager.preprocess_vars"
+        ],
+        "serialized_payload": "[local-ffa2a9d753d9b007b1d846f4] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.load\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:104-116\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n        p = Play()\n        if vars:\n            p.vars = vars.copy()\n        return p.load_data(data, variable_manager=variable_manager, loader=loader)\n"
+      }
+    ]
+  },
+  "0d20cd669f1216767140ece6bf4abc1091d62631d745f4ecee3fb24bdffd1b23": {
+    "payload": "Public maintenance knowledge. Verify applicability against the request and current code; quoted implementation is not proof of correctness.\n\n[local-9ccda5d5cd517b3eb3bacb64] Role: documented_contract\nApplies to: lib.ansible.playbook.attribute.Attribute.__init__.__doc__\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/attribute.py:47-78\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n\n\n[local-d81d35e5b8f1fbbbe0236b75-12c576c4] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.load.branch_106\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:104-112\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n",
+    "units": [
+      {
+        "unit_id": "local-9ccda5d5cd517b3eb3bacb64",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "docstring",
+        "applies_to": [
+          "lib.ansible.playbook.attribute.Attribute.__init__.__doc__"
+        ],
+        "preconditions": [],
+        "statement": "        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/attribute.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 47,
+            "line_end": 78,
+            "exact_excerpt": "        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n"
+          }
+        ],
+        "claim_role": "documented_contract",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "copy.copy",
+          "copy.deepcopy"
+        ],
+        "serialized_payload": "[local-9ccda5d5cd517b3eb3bacb64] Role: documented_contract\nApplies to: lib.ansible.playbook.attribute.Attribute.__init__.__doc__\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/attribute.py:47-78\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n        \"\"\"\n        :class:`Attribute` specifies constraints for attributes of objects which\n        derive from playbook data.  The attributes of the object are basically\n        a schema for the yaml playbook.\n\n        :kwarg isa: The type of the attribute.  Allowable values are a string\n            representation of any yaml basic datatype, python class, or percent.\n            (Enforced at post-validation time).\n        :kwarg private: Not used at runtime.  The docs playbook keyword dumper uses it to determine\n            that a keyword should not be documented.  mpdehaan had plans to remove attributes marked\n            private from the ds so they would not have been available at all.\n        :kwarg default: Default value if unspecified in the YAML document.\n        :kwarg required: Whether or not the YAML document must contain this field.\n            If the attribute is None when post-validated, an error will be raised.\n        :kwarg listof: If isa is set to \"list\", this can optionally be set to\n            ensure that all elements in the list are of the given type. Valid\n            values here are the same as those for isa.\n        :kwarg priority: The order in which the fields should be parsed. Generally\n            this does not need to be set, it is for rare situations where another\n            field depends on the fact that another field was parsed first.\n        :kwarg class_type: If isa is set to \"class\", this can be optionally set to\n            a class (not a string name). The YAML data for this field will be\n            passed to the __init__ method of that class during post validation and\n            the field will be an instance of that class.\n        :kwarg always_post_validate: Controls whether a field should be post\n            validated or not (default: False).\n        :kwarg inherit: A boolean value, which controls whether the object\n            containing this field should attempt to inherit the value from its\n            parent object if the local value is None.\n        :kwarg alias: An alias to use for the attribute name, for situations where\n            the attribute name may conflict with a Python reserved word.\n        \"\"\"\n"
+      },
+      {
+        "unit_id": "local-d81d35e5b8f1fbbbe0236b75-12c576c4",
+        "repository": "ansible/ansible",
+        "source_revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+        "kind": "branch",
+        "applies_to": [
+          "lib.ansible.playbook.play.Play.load.branch_106"
+        ],
+        "preconditions": [],
+        "statement": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n",
+        "verification_pattern": null,
+        "source_spans": [
+          {
+            "path_or_public_url": "lib/ansible/playbook/play.py",
+            "revision": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+            "line_start": 104,
+            "line_end": 112,
+            "exact_excerpt": "    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n"
+          }
+        ],
+        "claim_role": "existing_behavior",
+        "version_status": "supported",
+        "dependencies": [
+          "__future__.absolute_import",
+          "__future__.division",
+          "__future__.print_function",
+          "ansible.constants",
+          "ansible.context",
+          "ansible.errors.AnsibleAssertionError",
+          "ansible.errors.AnsibleParserError",
+          "ansible.module_utils._text.to_native",
+          "ansible.module_utils.six.string_types",
+          "ansible.playbook.attribute.FieldAttribute",
+          "ansible.playbook.base.Base",
+          "ansible.playbook.block.Block",
+          "ansible.playbook.collectionsearch.CollectionSearch",
+          "ansible.playbook.helpers.load_list_of_blocks",
+          "ansible.playbook.helpers.load_list_of_roles",
+          "ansible.playbook.role.Role",
+          "ansible.playbook.taggable.Taggable",
+          "ansible.utils.display.Display",
+          "ansible.vars.manager.preprocess_vars"
+        ],
+        "serialized_payload": "[local-d81d35e5b8f1fbbbe0236b75-12c576c4] Role: existing_behavior\nApplies to: lib.ansible.playbook.play.Play.load.branch_106\nSource: ansible/ansible@e8ae7211dabbd07093f50d6dfb383da3bb14f13d:lib/ansible/playbook/play.py:104-112\nPreconditions: unknown; consult complete source\nComplete source (existing behavior is not proof of correctness):\n    @staticmethod\n    def load(data, variable_manager=None, loader=None, vars=None):\n        if ('name' not in data or data['name'] is None) and 'hosts' in data:\n            if data['hosts'] is None or all(host is None for host in data['hosts']):\n                raise AnsibleParserError(\"Hosts list cannot be empty - please check your playbook\")\n            if isinstance(data['hosts'], list):\n                data['name'] = ','.join(data['hosts'])\n            else:\n                data['name'] = data['hosts']\n"
+      }
+    ]
+  }
+}

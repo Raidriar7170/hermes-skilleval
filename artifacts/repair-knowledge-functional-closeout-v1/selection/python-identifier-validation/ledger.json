@@ -1,0 +1,425 @@
+{
+  "requirements": [
+    {
+      "requirement_id": "req-ea74e3faa86ed8d1",
+      "parent_requirement": "req-ea74e3faa86ed8d1",
+      "verbatim_span": {
+        "field": "request",
+        "start": 977,
+        "end": 1046
+      },
+      "subject": [],
+      "condition_text": "Consistent validation behavior between Python 2 and Python 3, where:\n",
+      "expected_text": "Consistent validation behavior between Python 2 and Python 3, where:\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-c6486e903dd07730",
+      "parent_requirement": "req-c6486e903dd07730",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1047,
+        "end": 1107
+      },
+      "subject": [],
+      "condition_text": "- Non-ASCII characters are not allowed as valid identifiers\n",
+      "expected_text": "- Non-ASCII characters are not allowed as valid identifiers\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-f0d2b1b6e62133e0",
+      "parent_requirement": "req-f0d2b1b6e62133e0",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1108,
+        "end": 1184
+      },
+      "subject": [],
+      "condition_text": "- \"True\", \"False\", \"None\" are treated as reserved keywords in both versions\n",
+      "expected_text": "- \"True\", \"False\", \"None\" are treated as reserved keywords in both versions\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-31e7e952e27382a3",
+      "parent_requirement": "req-31e7e952e27382a3",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1375,
+        "end": 1528
+      },
+      "subject": [
+        "isidentifier"
+      ],
+      "condition_text": "- The ansible.utils.vars `isidentifier` function must return False for any input that is not a string, ensuring type safety across both Python versions.\n",
+      "expected_text": "- The ansible.utils.vars `isidentifier` function must return False for any input that is not a string, ensuring type safety across both Python versions.\n",
+      "case_family": [
+        "scalar"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-93853331f191a966",
+      "parent_requirement": "req-93853331f191a966",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1529,
+        "end": 1641
+      },
+      "subject": [],
+      "condition_text": "- The implementation must characterize empty strings and strings containing whitespaces as invalid identifiers.\n",
+      "expected_text": "- The implementation must characterize empty strings and strings containing whitespaces as invalid identifiers.\n",
+      "case_family": [
+        "scalar"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-256e6ddc6d4d767e",
+      "parent_requirement": "req-256e6ddc6d4d767e",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1642,
+        "end": 1930
+      },
+      "subject": [
+        "C.INVALID_VARIABLE_NAMES"
+      ],
+      "condition_text": "- There should be separate functionalities to if a string is an identifier or not in Python 2 or Python 3, rejecting identifiers matching any regex pattern defined in `C.INVALID_VARIABLE_NAMES` in Python 2 and any identifier containing non-ASCII characters in Python 3 to unify behavior.\n",
+      "expected_text": "- There should be separate functionalities to if a string is an identifier or not in Python 2 or Python 3, rejecting identifiers matching any regex pattern defined in `C.INVALID_VARIABLE_NAMES` in Python 2 and any identifier containing non-ASCII characters in Python 3 to unify behavior.\n",
+      "case_family": [
+        "scalar"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-759a8be27dbc8f87",
+      "parent_requirement": "req-759a8be27dbc8f87",
+      "verbatim_span": {
+        "field": "request",
+        "start": 1931,
+        "end": 2145
+      },
+      "subject": [
+        "isidentifier"
+      ],
+      "condition_text": "- The `isidentifier` function must not treat built-in function names (e.g., \"open\", \"print\") as invalid unless they are also Python keywords or reserved identifiers, such as \"True\", \"False\" and \"None\" in Python 3.\n",
+      "expected_text": "- The `isidentifier` function must not treat built-in function names (e.g., \"open\", \"print\") as invalid unless they are also Python keywords or reserved identifiers, such as \"True\", \"False\" and \"None\" in Python 3.\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-3a868c9025453b12",
+      "parent_requirement": "req-3a868c9025453b12",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2146,
+        "end": 2299
+      },
+      "subject": [],
+      "condition_text": "- The implementation must be compatible with the string_types check from ansible.module_utils.six for handling both str and unicode types appropriately.\n",
+      "expected_text": "- The implementation must be compatible with the string_types check from ansible.module_utils.six for handling both str and unicode types appropriately.\n",
+      "case_family": [
+        "scalar",
+        "compatibility"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-d4f9fa6e2cad3800",
+      "parent_requirement": "req-d4f9fa6e2cad3800",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2300,
+        "end": 2452
+      },
+      "subject": [],
+      "condition_text": "- The function should always return a strict boolean (True or False) without raising exceptions for invalid inputs (For example: numbers, None, bytes).\n",
+      "expected_text": "- The function should always return a strict boolean (True or False) without raising exceptions for invalid inputs (For example: numbers, None, bytes).\n",
+      "case_family": [
+        "exception"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-52b2148df4e85db2",
+      "parent_requirement": "req-52b2148df4e85db2",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2453,
+        "end": 2582
+      },
+      "subject": [],
+      "condition_text": "- On Python 3: validation must use str.isidentifier() in combination with keyword.iskeyword(), after enforcing ASCII-only input.\n",
+      "expected_text": "- On Python 3: validation must use str.isidentifier() in combination with keyword.iskeyword(), after enforcing ASCII-only input.\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-6119beadf89b4459",
+      "parent_requirement": "req-6119beadf89b4459",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2583,
+        "end": 2681
+      },
+      "subject": [],
+      "condition_text": "- On Python 2: reject identifiers that are keyword.iskeyword() or one of \"True\", \"False\", \"None\".\n",
+      "expected_text": "- On Python 2: reject identifiers that are keyword.iskeyword() or one of \"True\", \"False\", \"None\".\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    },
+    {
+      "requirement_id": "req-7a1c89ed7f6c93bd",
+      "parent_requirement": "req-7a1c89ed7f6c93bd",
+      "verbatim_span": {
+        "field": "request",
+        "start": 2682,
+        "end": 2824
+      },
+      "subject": [],
+      "condition_text": "- Identifiers with leading underscores or dunder-style names (_foo, __bar__) should be considered valid if they pass version-specific checks.\n",
+      "expected_text": "- Identifiers with leading underscores or dunder-style names (_foo, __bar__) should be considered valid if they pass version-specific checks.\n",
+      "case_family": [
+        "other"
+      ],
+      "status": "unverified",
+      "observation_refs": [],
+      "conflict": false
+    }
+  ],
+  "unresolved": [
+    {
+      "span": {
+        "field": "request",
+        "start": 0,
+        "end": 18
+      },
+      "text": "## Public problem\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 18,
+        "end": 145
+      },
+      "text": "###Title \n Inconsistent Python identifier validation behavior between Python 2 and Python 3 in ansible.utils.vars.isidentifier\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 146,
+        "end": 162
+      },
+      "text": "### Description\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 163,
+        "end": 625
+      },
+      "text": "The `isidentifier` function in `ansible.utils.vars` presents inconsistent behavior between Python 2 and Python 3 for identifier validation. Specifically, Python 2 does not consider `True`, `False`, and `None` as reserved keywords, while Python 3 does. Additionally, Python 3 allows non-ASCII characters in identifiers, while Python 2 does not. This inconsistency can lead to unexpected behaviors when Ansible playbooks are executed on different Python versions.\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 626,
+        "end": 641
+      },
+      "text": "### Issue Type\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 642,
+        "end": 653
+      },
+      "text": "Bug Report\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 654,
+        "end": 673
+      },
+      "text": "### Component Name\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 674,
+        "end": 693
+      },
+      "text": "ansible.utils.vars\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 694,
+        "end": 717
+      },
+      "text": "### Steps to Reproduce\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 718,
+        "end": 844
+      },
+      "text": "1. Use the `ansible.utils.vars.isidentifier` function to validate identifiers that include non-ASCII characters like \"křížek\"\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 845,
+        "end": 912
+      },
+      "text": "2. Use the function to validate words like \"True\", \"False\", \"None\"\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 913,
+        "end": 954
+      },
+      "text": "3. Execute on both Python 2 and Python 3\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 955,
+        "end": 976
+      },
+      "text": "### Expected Results\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 1185,
+        "end": 1204
+      },
+      "text": "### Actual Results\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 1205,
+        "end": 1274
+      },
+      "text": "- In Python 3, non-ASCII characters are allowed as valid identifiers\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 1275,
+        "end": 1351
+      },
+      "text": "- In Python 2, \"True\", \"False\", \"None\" are not considered reserved keywords\n",
+      "reason": "context_or_unresolved"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 1352,
+        "end": 1375
+      },
+      "text": "## Public requirements\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 2825,
+        "end": 2845
+      },
+      "text": "## Public interface\n",
+      "reason": "heading"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 2845,
+        "end": 2878
+      },
+      "text": "No new interfaces are introduced\n",
+      "reason": "interface_scope_metadata"
+    },
+    {
+      "span": {
+        "field": "request",
+        "start": 2880,
+        "end": 3216
+      },
+      "text": "Shared environment: public maintenance knowledge is readable at /workspace/public-docs/knowledge.txt and index.json. These are optional source quotations available equally to every continuation. For local tests use PYTHONPATH=lib:test/lib and set ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp and HOME=/workspace/scratch as needed.\n",
+      "reason": "execution_context"
+    }
+  ],
+  "weights": {
+    "req-ea74e3faa86ed8d1": 0.08333333333333333,
+    "req-c6486e903dd07730": 0.08333333333333333,
+    "req-f0d2b1b6e62133e0": 0.08333333333333333,
+    "req-31e7e952e27382a3": 0.08333333333333333,
+    "req-93853331f191a966": 0.08333333333333333,
+    "req-256e6ddc6d4d767e": 0.08333333333333333,
+    "req-759a8be27dbc8f87": 0.08333333333333333,
+    "req-3a868c9025453b12": 0.08333333333333333,
+    "req-d4f9fa6e2cad3800": 0.08333333333333333,
+    "req-52b2148df4e85db2": 0.08333333333333333,
+    "req-6119beadf89b4459": 0.08333333333333333,
+    "req-7a1c89ed7f6c93bd": 0.08333333333333333
+  },
+  "environment_functional_weight": 0,
+  "association_status": "UNVERIFIED_NO_SEMANTIC_LINKS"
+}

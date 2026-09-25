@@ -1,0 +1,1539 @@
+[
+  {
+    "task_id": "instance_ansible__ansible-1ee70fc272aff6bf3415357c6e13c5de5b928d9b-v1055803c3a812189a1133297f7f5468579283f86",
+    "arm": "M",
+    "repeat": 1,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib python -m pytest -q test/units/utils/test_vars.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc 'command -v python python3; ls -l \"$(command -v python)\" \"$(command -v python3)\"; find /usr /lib -name '\"'libpython3.11.so.1.0' -print 2>/dev/null | head\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib python -m pytest -q test/units/utils/test_vars.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '15,38p' lib/ansible/utils/vars.py; sed -n '228,258p' lib/ansible/utils/vars.py; sed -n '15,62p' test/units/utils/test_vars.py; rg -n \\\"\\\\bast\\\\b\\\" lib/ansible/utils/vars.py\"",
+          "exit_code": 1
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib python -m pytest -q test/units/utils/test_vars.py test/units/regex/test_invalid_var_names.py && LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib python -m compileall -q lib/ansible/utils/vars.py'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/utils/vars.py",
+        "test/units/utils/test_vars.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-9337bdeb4e7dc83a952703ab",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-4c945e251edc8a24145544b1",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-e86eb8778aa79c96461909a6",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-047fc2cebfabea0a1d83cd82",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "1a6a2ebb97876651a9824c0d5ec2834a2a3cca1e32ff452255b373d9bb99624b"
+  },
+  {
+    "task_id": "instance_ansible__ansible-1ee70fc272aff6bf3415357c6e13c5de5b928d9b-v1055803c3a812189a1133297f7f5468579283f86",
+    "arm": "R",
+    "repeat": 1,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"rg -n \\\"python_requires|Programming Language :: Python :: 3|python3\\\\.5|py35|py36|isidentifier\\\" setup.py setup.cfg tox.ini shippable.yml .azure-pipelines test/units/utils/test_vars.py 2>/dev/null | head -160; tail -80 test/units/utils/test_vars.py; python --version\"",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc 'env LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/utils/test_vars.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '15,55p' lib/ansible/utils/vars.py; sed -n '228,260p' lib/ansible/utils/vars.py; sed -n '15,90p' test/units/utils/test_vars.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'env LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/utils/test_vars.py test/units/regex/test_invalid_var_names.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"env LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -c \\\"from ansible.utils.vars import isidentifier; cases = ('foo', '_foo', '__bar__', 'open', 'print', 'for', 'True', '', 'foo bar', 'křížek', None, 1, b'foo'); print([(value, isidentifier(value), type(isidentifier(value)).__name__) for value in cases])\\\"\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg -n -C 8 \\\"isidentifier(_PY|_py|\\\\()|INVALID_VARIABLE_NAMES|křížek\\\" /workspace/public-docs/knowledge.txt /workspace/public-docs/index.json | head -240\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg -n -C 6 'test_isidentifier|isidentifier_PY|isidentifier_py|portable Python identifier' /workspace/public-docs/knowledge.txt /workspace/public-docs/index.json | head -240\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'rg -l \"set_fact|set_stats|register.*valid|variable name.*valid|isidentifier\" test/units | sort | head -100'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'env LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/utils'",
+          "exit_code": 1
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/utils/vars.py",
+        "test/units/utils/test_vars.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-4c945e251edc8a24145544b1",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-9337bdeb4e7dc83a952703ab",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-e86eb8778aa79c96461909a6",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "0b0183e140fbcee1797aac9cd7e358fc6061c19ce69a8a3cfe25e6dc3320dff8"
+  },
+  {
+    "task_id": "instance_ansible__ansible-1ee70fc272aff6bf3415357c6e13c5de5b928d9b-v1055803c3a812189a1133297f7f5468579283f86",
+    "arm": "N",
+    "repeat": 1,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '15,42p' test/units/utils/test_vars.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/utils/test_vars.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc \"command -v python python3 pytest; ls -l /usr/bin/python*; find /usr /lib -name 'libpython3.11.so*' -print 2>/dev/null | head -20\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/utils/test_vars.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '18,75p' test/units/utils/test_vars.py; sed -n '225,260p' lib/ansible/utils/vars.py; awk 'length(\"'$0) > 160 { print FNR \":\" length($0) \":\" $0 }'\"' lib/ansible/utils/vars.py test/units/utils/test_vars.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/utils/test_vars.py test/units/regex/test_invalid_var_names.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib HOME=/workspace/scratch python -m py_compile lib/ansible/utils/vars.py test/units/utils/test_vars.py && find lib test docs -type f -newermt '2026-09-25 00:00:00' -printf '%p\\\\n' | sort | head -100\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rm lib/ansible/utils/__pycache__/vars.cpython-311.pyc test/units/utils/__pycache__/test_vars.cpython-311.pyc; find lib/ansible/utils/__pycache__ test/units/utils/__pycache__ -maxdepth 1 -type f -newermt '2026-09-25 00:00:00' -print 2>/dev/null\"",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/utils/vars.py",
+        "test/units/utils/test_vars.py"
+      ],
+      "source_visibility": []
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": null
+  },
+  {
+    "task_id": "instance_ansible__ansible-1ee70fc272aff6bf3415357c6e13c5de5b928d9b-v1055803c3a812189a1133297f7f5468579283f86",
+    "arm": "M",
+    "repeat": 2,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"rg -n -C 8 \\\"isidentifier_PY|portable Python identifier|křížek|INVALID_VARIABLE_NAMES.*isidentifier\\\" /workspace/public-docs/knowledge.txt /workspace/public-docs/index.json /workspace/repo 2>/dev/null | head -200; rg -n \\\"Python 3\\\\.[0-9]|PYTHON_MIN|requires-python|Programming Language :: Python :: 3\\\" setup.py setup.cfg docs .github 2>/dev/null | head -100\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/utils/test_vars.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/utils/test_vars.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '15,55p' lib/ansible/utils/vars.py; sed -n '228,275p' lib/ansible/utils/vars.py; sed -n '15,75p' test/units/utils/test_vars.py; rg -n \\\"assertIs\\\\(\\\" test/units/utils | head -20\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/utils'",
+          "exit_code": 1
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m py_compile lib/ansible/utils/vars.py test/units/utils/test_vars.py && LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/utils/test_vars.py'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/utils/vars.py",
+        "test/units/utils/test_vars.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-9337bdeb4e7dc83a952703ab",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-4c945e251edc8a24145544b1",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-e86eb8778aa79c96461909a6",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-047fc2cebfabea0a1d83cd82",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "1a6a2ebb97876651a9824c0d5ec2834a2a3cca1e32ff452255b373d9bb99624b"
+  },
+  {
+    "task_id": "instance_ansible__ansible-1ee70fc272aff6bf3415357c6e13c5de5b928d9b-v1055803c3a812189a1133297f7f5468579283f86",
+    "arm": "N",
+    "repeat": 2,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"rg -n \\\"python_requires|Programming Language :: Python :: 3|Python 3\\\\.[0-9]\\\" setup.py setup.cfg pyproject.toml tox.ini README.rst docs 2>/dev/null | head -100; tail -80 test/units/utils/test_vars.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib python -m pytest -q test/units/utils/test_vars.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc \"command -v python python3 pytest || true; ls -l /usr/local/bin/python* /usr/bin/python* 2>/dev/null || true; find /usr /lib /workspace -name 'libpython3.11.so*' -o -name 'libpython3.*.so*' 2>/dev/null | head -50\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib python -m pytest -q test/units/utils/test_vars.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib python -m pytest -q test/units/utils test/units/regex/test_invalid_var_names.py'",
+          "exit_code": 1
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '15,38p' lib/ansible/utils/vars.py; sed -n '228,260p' lib/ansible/utils/vars.py; sed -n '15,70p' test/units/utils/test_vars.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib python -m pytest -q test/units/utils/test_vars.py test/units/regex/test_invalid_var_names.py && LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib python - <<'PY'\nfrom ansible.utils.vars import isidentifier\ncases = {\n    'foo': True, '_foo': True, '__bar__': True, 'open': True, 'print': True,\n    '': False, 'a b': False, '1foo': False, 'foo-bar': False,\n    'True': False, 'False': False, 'None': False, 'for': False,\n    u'k\\\\u0159\\\\u00ed\\\\u017eek': False, None: False, 42: False, b'foo': False,\n}\nfor value, expected in cases.items():\n    actual = isidentifier(value)\n    assert type(actual) is bool and actual is expected, (value, actual, expected)\nprint('identifier matrix passed (%d cases)' % len(cases))\nPY\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib python -m py_compile lib/ansible/utils/vars.py test/units/utils/test_vars.py; rg -n \"''^import ast$|def isidentifier|test_isidentifier\" lib/ansible/utils/vars.py test/units/utils/test_vars.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"find lib/ansible/utils test/units/utils -type f \\\\( -name '*.pyc' -o -name '*.pyo' \\\\) -newermt '2026-09-25 00:00:00' -print; find lib/ansible/utils test/units/utils -type d -name '__pycache__' -newermt '2026-09-25 00:00:00' -print | head -100\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"find lib/ansible/utils/__pycache__ test/units/utils/__pycache__ -maxdepth 1 -type f -printf '%p\\\\n' 2>/dev/null | sort\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'rm lib/ansible/utils/__pycache__/vars.cpython-311.pyc test/units/utils/__pycache__/test_vars.cpython-311.pyc && rmdir lib/ansible/utils/__pycache__ test/units/utils/__pycache__'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/utils/vars.py",
+        "test/units/utils/test_vars.py"
+      ],
+      "source_visibility": []
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": null
+  },
+  {
+    "task_id": "instance_ansible__ansible-1ee70fc272aff6bf3415357c6e13c5de5b928d9b-v1055803c3a812189a1133297f7f5468579283f86",
+    "arm": "R",
+    "repeat": 2,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"rg -n \\\"python_requires|Programming Language :: Python :: 3|Python 3\\\\.[0-9]\\\" setup.py tox.ini docs | head -80; tail -80 test/units/utils/test_vars.py; python --version\"",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc \"command -v -a python python3 pytest; ls -l /usr/bin/python* /usr/local/bin/python* 2>/dev/null; env | rg '\"'^(LD|PYTHON|PATH)='\"'\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python3.12 -m pytest -q test/units/utils/test_vars.py'",
+          "exit_code": 2
+        },
+        {
+          "command": "/usr/bin/bash -lc \"find /usr/local/lib /usr/lib -maxdepth 3 -name 'libpython3.11.so*' -o -name 'libpython3.12.so*' 2>/dev/null; /usr/local/bin/python3.12 -m pip list --format=freeze | head -40; find /workspace -maxdepth 4 -type f \\\\( -name python -o -name pytest \\\\) -print 2>/dev/null | head -80\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python3.11 -m pytest -q test/units/utils/test_vars.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python3.11 -m pytest -q test/units/utils/test_vars.py test/units/regex/test_invalid_var_names.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"if test -x /usr/lib/git-core/git; then /usr/lib/git-core/git diff --check && /usr/lib/git-core/git diff -- lib/ansible/utils/vars.py test/units/utils/test_vars.py; else sed -n '15,45p;225,260p' lib/ansible/utils/vars.py; sed -n '15,70p' test/units/utils/test_vars.py; fi\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python3.11 -m pytest -q test/units/utils/test_vars.py test/units/regex/test_invalid_var_names.py && LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib /usr/local/bin/python3.11 -m py_compile lib/ansible/utils/vars.py test/units/utils/test_vars.py'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/utils/vars.py",
+        "test/units/utils/test_vars.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-4c945e251edc8a24145544b1",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-9337bdeb4e7dc83a952703ab",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-e86eb8778aa79c96461909a6",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "0b0183e140fbcee1797aac9cd7e358fc6061c19ce69a8a3cfe25e6dc3320dff8"
+  },
+  {
+    "task_id": "instance_ansible__ansible-3db08adbb1cc6aa9941be5e0fc810132c6e1fa4b-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+    "arm": "N",
+    "repeat": 1,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc \"command -v python; command -v python3; ls -l /usr/local/bin/python* 2>/dev/null; find /usr/local /usr/lib -name 'libpython3.11.so*' -print 2>/dev/null | head -20\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/filter'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '20,165p' lib/ansible/plugins/filter/mathstuff.py; rg -n \\\"['\\\\\\\"]min['\\\\\\\"]|['\\\\\\\"]max['\\\\\\\"]\\\" lib/ansible/plugins/filter/mathstuff.py test/units/plugins/filter/test_mathstuff.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'rg -n -i \"Pass attribute to the max filter|min.max filter|HAS_MIN_MAX|do_min.*do_max\" /workspace/public-docs/knowledge.txt /workspace/public-docs/index.json | head -80'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python - <<'PY'\nfrom jinja2 import Environment\nfrom ansible.plugins.filter.mathstuff import FilterModule\n\nenv = Environment()\nenv.filters.update(FilterModule().filters())\ndata = [{'value': 2}, {'value': 7}, {'value': 3}]\nprint(env.from_string(\\\"{{ data | max(attribute='value') }}\\\").render(data=data))\nprint(env.from_string(\\\"{{ data | min(attribute='value') }}\\\").render(data=data))\nPY\"",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/plugins/filter/mathstuff.py",
+        "test/units/plugins/filter/test_mathstuff.py"
+      ],
+      "source_visibility": []
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": null
+  },
+  {
+    "task_id": "instance_ansible__ansible-3db08adbb1cc6aa9941be5e0fc810132c6e1fa4b-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+    "arm": "R",
+    "repeat": 1,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc 'command -v python; command -v python3; ls /usr/lib/x86_64-linux-gnu/libpython* /usr/local/lib/libpython* 2>/dev/null'",
+          "exit_code": 2
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python - <<'PY'\nfrom jinja2 import Environment\nfrom ansible.plugins.filter.mathstuff import FilterModule\n\nenv = Environment()\nenv.filters.update(FilterModule().filters())\ndata = [{'name': 'small', 'size': 1}, {'name': 'large', 'size': 9}]\nassert env.from_string(\\\"{{ data | max(attribute='size') | attr('name') }}\\\").render(data=data) == 'large'\nassert env.from_string(\\\"{{ data | min(attribute='size') | attr('name') }}\\\").render(data=data) == 'small'\nprint('Jinja integration render passed')\nPY\"",
+          "exit_code": 1
+        },
+        {
+          "command": "/usr/bin/bash -lc \"LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python - <<'PY'\nfrom jinja2 import Environment\nfrom ansible.plugins.filter.mathstuff import FilterModule\n\nenv = Environment()\nenv.filters.update(FilterModule().filters())\ndata = [{'name': 'small', 'size': 1}, {'name': 'large', 'size': 9}]\nassert env.from_string(\\\"{{ (data | max(attribute='size'))['name'] }}\\\").render(data=data) == 'large'\nassert env.from_string(\\\"{{ (data | min(attribute='size'))['name'] }}\\\").render(data=data) == 'small'\nprint('Jinja integration render passed')\nPY\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '20,165p' lib/ansible/plugins/filter/mathstuff.py; sed -n '55,130p' test/units/plugins/filter/test_mathstuff.py; sed -n '220,275p' lib/ansible/plugins/filter/mathstuff.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/plugins/filter/mathstuff.py",
+        "test/units/plugins/filter/test_mathstuff.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-913ea0a64604d91dd65fbdde",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-799aff2fb7ea734d99661f6e",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-79aec51b058ccc1729436dbb",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-aeca2eab56a6c7eb097dd66a-7f7ee5c6",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "468791d2d3405697741ded6ecb811730ede7d83e18d20ba2313c66c4931e7bf0"
+  },
+  {
+    "task_id": "instance_ansible__ansible-3db08adbb1cc6aa9941be5e0fc810132c6e1fa4b-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+    "arm": "M",
+    "repeat": 1,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc \"command -v python python3 pytest || true; ls -l /usr/bin/python* 2>/dev/null | head; find /usr /lib -name 'libpython3.11.so.1.0' -print 2>/dev/null | head\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"nl -ba lib/ansible/plugins/filter/mathstuff.py | sed -n '25,160p'; nl -ba lib/ansible/plugins/filter/mathstuff.py | tail -70; nl -ba test/units/plugins/filter/test_mathstuff.py | sed -n '65,135p'\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib HOME=/workspace/scratch /usr/local/bin/python - <<'PY'\nfrom jinja2 import Environment\nfrom ansible.plugins.filter.mathstuff import FilterModule\n\nenv = Environment()\nenv.filters.update(FilterModule().filters())\nmounts = [\n    {'mount': '/small', 'block_total': 10},\n    {'mount': '/large', 'block_total': 50},\n]\nprint(env.from_string(\\\"{{ mounts | max(attribute='block_total') | tojson }}\\\").render(mounts=mounts))\nprint(env.from_string(\\\"{{ values | min(case_sensitive=true) }}\\\").render(values=['b', 'A']))\nPY\"",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/plugins/filter/mathstuff.py",
+        "test/units/plugins/filter/test_mathstuff.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-913ea0a64604d91dd65fbdde",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-799aff2fb7ea734d99661f6e",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-79aec51b058ccc1729436dbb",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-aeca2eab56a6c7eb097dd66a-7f7ee5c6",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "468791d2d3405697741ded6ecb811730ede7d83e18d20ba2313c66c4931e7bf0"
+  },
+  {
+    "task_id": "instance_ansible__ansible-3db08adbb1cc6aa9941be5e0fc810132c6e1fa4b-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+    "arm": "N",
+    "repeat": 2,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib python -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc \"command -v python; command -v python3; ls -l /usr/bin/python* 2>/dev/null; find /usr /lib -name 'libpython3.11.so*' -print 2>/dev/null | head -20\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib /usr/local/bin/python -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib /usr/local/bin/python -m pytest -q test/units/plugins/filter'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/plugins/filter/mathstuff.py",
+        "test/units/plugins/filter/test_mathstuff.py"
+      ],
+      "source_visibility": []
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": null
+  },
+  {
+    "task_id": "instance_ansible__ansible-3db08adbb1cc6aa9941be5e0fc810132c6e1fa4b-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+    "arm": "R",
+    "repeat": 2,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc 'command -v python; command -v python3; readlink -f \"$(command -v python3)\"; find /usr /lib -name '\"'libpython3.11.so.1.0' -print 2>/dev/null | head -20\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '24,160p' lib/ansible/plugins/filter/mathstuff.py; sed -n '55,125p' test/units/plugins/filter/test_mathstuff.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '220,310p' lib/ansible/plugins/filter/mathstuff.py; LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib HOME=/workspace/scratch python - <<'PY'\nfrom jinja2 import Environment\nfrom ansible.plugins.filter.mathstuff import FilterModule\n\nenv = Environment()\nenv.filters.update(FilterModule().filters())\ndata = [{'name': 'small', 'blocks': 1}, {'name': 'large', 'blocks': 9}]\nprint(env.from_string(\\\"{{ data | max(attribute='blocks') | tojson }}\\\").render(data=data))\nprint(env.from_string(\\\"{{ values | min(case_sensitive=true) }}\\\").render(values=['a', 'B']))\nPY\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/plugins/filter/mathstuff.py",
+        "test/units/plugins/filter/test_mathstuff.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-913ea0a64604d91dd65fbdde",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-799aff2fb7ea734d99661f6e",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-79aec51b058ccc1729436dbb",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-aeca2eab56a6c7eb097dd66a-7f7ee5c6",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "468791d2d3405697741ded6ecb811730ede7d83e18d20ba2313c66c4931e7bf0"
+  },
+  {
+    "task_id": "instance_ansible__ansible-3db08adbb1cc6aa9941be5e0fc810132c6e1fa4b-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+    "arm": "M",
+    "repeat": 2,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc \"command -v python python3 pytest; ls -l /usr/bin/python* /usr/local/bin/python* 2>/dev/null; find /usr -name 'libpython3.11.so.1.0' -print 2>/dev/null | head\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python3.11 -m pytest -q test/units/plugins/filter/test_mathstuff.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python3.11 -m pytest -q test/units/plugins/filter'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/plugins/filter/mathstuff.py",
+        "test/units/plugins/filter/test_mathstuff.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-913ea0a64604d91dd65fbdde",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-799aff2fb7ea734d99661f6e",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-79aec51b058ccc1729436dbb",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-aeca2eab56a6c7eb097dd66a-7f7ee5c6",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "468791d2d3405697741ded6ecb811730ede7d83e18d20ba2313c66c4931e7bf0"
+  },
+  {
+    "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+    "arm": "N",
+    "repeat": 1,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"rg --files test/units | rg '(vars|variable|manager|dataloader)' | sort; rg -n \\\"load_from_file\\\\([\"'^'\"\\\\n]*cache=|def load_from_file\\\" lib test/units | head -240\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/vars/test_variable_manager.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '135,230p' lib/ansible/parsing/dataloader.py; rg -n \\\"More efficient vars file reads|vaulted.*cache|cache.*vaulted|load_from_file\\\" /workspace/public-docs/knowledge.txt | head -100; rg -n \\\"load_from_file\\\" test/units/vars/test_variable_manager.py\"",
+          "exit_code": 1
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/parsing test/units/vars'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"ls -ld .git 2>/dev/null || true; ls -l /usr/lib/git-core/git /usr/bin/git 2>/dev/null || true; sed -n '72,115p' lib/ansible/parsing/dataloader.py; sed -n '345,362p' lib/ansible/vars/manager.py; sed -n '40,85p' test/units/parsing/test_dataloader.py; sed -n '238,265p' test/units/parsing/test_dataloader.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/parsing/test_dataloader.py test/units/vars/test_variable_manager.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/parsing test/units/vars'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/parsing/dataloader.py",
+        "lib/ansible/vars/manager.py",
+        "test/units/parsing/test_dataloader.py"
+      ],
+      "source_visibility": []
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": null
+  },
+  {
+    "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+    "arm": "M",
+    "repeat": 1,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"rg --files test/units | rg '(vars|variable|manager)' | head -100; rg -n \\\"load_from_file\\\\([\"'^'\"\\\\n]*cache=\\\" lib test/units test/integration | head -240; rg -n \\\"def load_from_file\\\" lib test | head -100\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/vars/test_variable_manager.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg -n -C 5 \\\"cache.?=.?'vaulted'|cache must be one|More efficient vars|vaulted-only\\\" /workspace/public-docs/knowledge.txt /workspace/public-docs/index.json 2>/dev/null | head -240; sed -n '1,180p' test/units/vars/test_variable_manager.py; sed -n '75,112p' lib/ansible/parsing/dataloader.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/parsing/test_dataloader.py test/units/vars/test_variable_manager.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg --files test/units/plugins | rg '(inventory|host_group_vars|vars)' | head -160; rg -n \\\"cache=(True|False)|cache: bool\\\" lib test | head -100; rg -n \\\"_FILE_CACHE\\\" test/units | head -100\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/inventory'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib HOME=/workspace/scratch python -m py_compile lib/ansible/parsing/dataloader.py lib/ansible/vars/manager.py lib/ansible/plugins/inventory/auto.py lib/ansible/plugins/inventory/yaml.py lib/ansible/plugins/inventory/__init__.py lib/ansible/plugins/vars/host_group_vars.py test/units/parsing/test_dataloader.py test/units/vars/test_variable_manager.py test/units/mock/loader.py test/integration/targets/rel_plugin_loading/subdir/inventory_plugins/notyaml.py'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/parsing/dataloader.py",
+        "lib/ansible/plugins/inventory/__init__.py",
+        "lib/ansible/plugins/inventory/auto.py",
+        "lib/ansible/plugins/inventory/yaml.py",
+        "lib/ansible/plugins/vars/host_group_vars.py",
+        "lib/ansible/vars/manager.py",
+        "test/integration/targets/rel_plugin_loading/subdir/inventory_plugins/notyaml.py",
+        "test/units/mock/loader.py",
+        "test/units/parsing/test_dataloader.py",
+        "test/units/vars/test_variable_manager.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-af001a9639376b614f883a11",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-c836e0046a19fde732f53558",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-a93822d89a48011530d203e8",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "d7e52b1b62f768d9c1afc40d6525920d522744254266dbb8f6a84f44061d4a61"
+  },
+  {
+    "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+    "arm": "R",
+    "repeat": 1,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"rg --files test/units | rg '(vars|variable|manager)' | head -120; rg -n \\\"VariableManager|vars_files|cache=False|cache=True\\\" test/units | head -240\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/vars/test_variable_manager.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '125,190p' lib/ansible/parsing/dataloader.py; rg -n \\\"load_from_file\\\\(\\\" lib test/units | sed -n '1,260p'; sed -n '80,115p' test/units/vars/test_variable_manager.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/parsing test/units/vars'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/inventory'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '74,115p' lib/ansible/parsing/dataloader.py; sed -n '348,361p' lib/ansible/vars/manager.py; sed -n '42,82p' test/units/parsing/test_dataloader.py; sed -n '224,265p' test/units/parsing/test_dataloader.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'rg -n -i \"cache.?=.?(vaulted|none)|more efficient vars|DataLoader.load_from_file\" /workspace/public-docs/knowledge.txt /workspace/public-docs/index.json | head -160'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/vars'",
+          "exit_code": 4
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/parsing/dataloader.py",
+        "lib/ansible/vars/manager.py",
+        "test/units/parsing/test_dataloader.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-af001a9639376b614f883a11",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-c836e0046a19fde732f53558",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "71ab7046ce4f8d118db46e4dd14151cbdc93c8ce90f7fd98c7b5079b93eb1c6c"
+  },
+  {
+    "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+    "arm": "N",
+    "repeat": 2,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"rg --files test/units | rg '(vars|variable|manager)' | head -120; rg -n \\\"load_from_file\\\\(|_FILE_CACHE|cache must be\\\" test/units | head -240; rg -n \\\"Literal\\\\[|str \\\\| bool|cache: str\\\" lib/ansible/parsing lib/ansible/vars | head -100\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg -n \\\"def _get_file_contents\\\" -A55 lib/ansible/parsing/dataloader.py; sed -n '1,260p' test/units/vars/test_variable_manager.py; rg -n \\\"load_from_file|vars_files|cache\\\" test/units/vars/test_variable_manager.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/vars/test_variable_manager.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/parsing test/units/vars'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/parsing/dataloader.py",
+        "lib/ansible/vars/manager.py",
+        "test/units/parsing/test_dataloader.py"
+      ],
+      "source_visibility": []
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": null
+  },
+  {
+    "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+    "arm": "R",
+    "repeat": 2,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"find test/units -maxdepth 4 -type f | sort | rg '(vars|variable|manager|dataloader)' | head -200; rg -n \\\"def load_from_file\\\\(\\\" lib test | head -100; rg -n \\\"load_from_file\\\\([\"'^'\"\\\\n]*cache=\\\" lib test | head -200\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/vars/test_variable_manager.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/parsing test/units/vars'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/parsing/dataloader.py",
+        "lib/ansible/vars/manager.py",
+        "test/units/parsing/test_dataloader.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-af001a9639376b614f883a11",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-c836e0046a19fde732f53558",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "71ab7046ce4f8d118db46e4dd14151cbdc93c8ce90f7fd98c7b5079b93eb1c6c"
+  },
+  {
+    "task_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+    "arm": "M",
+    "repeat": 2,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"rg --files test/units | rg 'vars|manager|dataloader' | sort; rg -n \\\"load_from_file|vars_files\\\" test/units | head -240\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/vars/test_variable_manager.py test/units/parsing/test_dataloader.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '70,115p' test/units/vars/test_variable_manager.py; sed -n '75,112p' lib/ansible/parsing/dataloader.py; sed -n '45,85p' test/units/parsing/test_dataloader.py; sed -n '235,265p' test/units/parsing/test_dataloader.py; rg -n \\\"cache: bool|cache=True|cache=False\\\" lib/ansible test/units/mock/loader.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/parsing/test_dataloader.py test/units/vars/test_variable_manager.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/parsing test/units/vars'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib HOME=/workspace/scratch python -m compileall -q lib/ansible/parsing/dataloader.py lib/ansible/vars/manager.py test/units/mock/loader.py test/units/parsing/test_dataloader.py test/units/vars/test_variable_manager.py && rg -n -C 3 \\\"cache: str \\\\| bool|cache = 'all'|cache='vaulted'|test_cache_(none|vaulted)\\\" lib/ansible/parsing/dataloader.py lib/ansible/vars/manager.py test/units/mock/loader.py test/units/parsing/test_dataloader.py test/units/vars/test_variable_manager.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg --files test/units/plugins test/units/inventory | rg '(inventory|host_group_vars)' | sort | head -240\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/plugins/inventory test/units/inventory'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/parsing/dataloader.py",
+        "lib/ansible/vars/manager.py",
+        "test/units/mock/loader.py",
+        "test/units/parsing/test_dataloader.py",
+        "test/units/vars/test_variable_manager.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-af001a9639376b614f883a11",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-c836e0046a19fde732f53558",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-a93822d89a48011530d203e8",
+          "role": "existing_behavior",
+          "visibility": "already_visible_in_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "d7e52b1b62f768d9c1afc40d6525920d522744254266dbb8f6a84f44061d4a61"
+  },
+  {
+    "task_id": "instance_ansible__ansible-cd473dfb2fdbc97acf3293c134b21cbbcfa89ec3-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+    "arm": "M",
+    "repeat": 1,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"find lib/ansible/utils -maxdepth 2 -iname '*collection*' -print\nfind lib/ansible -path '*collection_loader*' -print\nrg -n \\\"collection_loader\\\" lib test/units | head -100\nsed -n '70,105p' lib/ansible/module_utils/common/collections.py\nsed -n '1,80p' lib/ansible/utils/collection_loader/__init__.py 2>/dev/null || true\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg -n \\\"binary_type, text_type|text_type, binary_type|isinstance\\\\([\"'^'\"\\\\n]*binary_type\\\" lib/ansible/playbook lib/ansible | head -80\nrg -n \\\"assertRaisesRegexp|assertRaisesRegex\\\" test/units/playbook/test_play.py test/units/playbook/test_base.py | head -60\nsed -n '1,55p' lib/ansible/module_utils/six/__init__.py 2>/dev/null || true\nrg -n \\\"binary_type|text_type|string_types\\\" lib/ansible/module_utils/six.py lib/ansible/module_utils/six/__init__.py | head -40\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/playbook/test_play.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc \"command -v -a python python3 pytest || true\nls -l /usr/bin/python* /usr/local/bin/python* 2>/dev/null || true\nfind /usr /lib -name 'libpython3.11.so*' -o -name 'libpython3.*.so*' 2>/dev/null | head -40\nldd \\\"\"'$(command -v python)\" 2>/dev/null || true'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -m pytest -q test/units/playbook/test_play.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg -n \\\"Hosts list cannot contain|invalid host value|Play\\\\.load|_validate_hosts\\\" /workspace/public-docs/knowledge.txt /workspace/public-docs/index.json 2>/dev/null | head -80\nsed -n '20,135p' lib/ansible/playbook/play.py\nsed -n '25,90p' test/units/playbook/test_play.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -m pytest -q test/units/playbook'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '1,90p' test/integration/targets/playbook/runme.sh\nfind test/integration/targets/playbook -maxdepth 2 -type f -print | sort\nrg -n \\\"Hosts list cannot be empty|hosts:.*null|hosts: *\"'$|hosts: '\"\\\\[\\\\]\\\" test/integration/targets/playbook test | head -100\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'set +e\noutput=$(PYTHONPATH=/workspace/repo/lib:/workspace/repo/test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 /workspace/repo/bin/ansible-playbook -i /workspace/repo/test/integration/inventory /workspace/repo/test/integration/targets/playbook/empty_hosts.yml 2>&1)\nstatus=$?\nprintf '\"'exit=%s\\\\n%s\\\\n' \\\"\"'$status\" \"$output\"\ntest \"$status\" -ne 0\nprintf '\"'%s\\\\n' \\\"\"'$output\" | grep -F \"ERROR! Hosts list cannot be empty. Please check your playbook\"'",
+          "exit_code": 1
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg -n \\\"\\\\.git/HEAD|git/HEAD|__version__|ANSIBLE_VERSION\\\" lib/ansible/release.py lib/ansible -g '*.py' | head -100\nsed -n '1,140p' lib/ansible/release.py\nsed -n '1,120p' test/integration/targets/hosts_field/test_hosts_field.yml\nfind test/integration/targets/hosts_field -maxdepth 2 -type f -print -exec sed -n '1,100p' {} \\\\;\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=/workspace/repo/lib:/workspace/repo/test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 /workspace/repo/bin/ansible-playbook -vvv -i /workspace/repo/test/integration/inventory /workspace/repo/test/integration/targets/playbook/empty_hosts.yml'",
+          "exit_code": 250
+        },
+        {
+          "command": "/usr/bin/bash -lc 'set +e\noutput=$(PYTHONPATH=/workspace/repo/lib:/workspace/repo/test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -c \"import ansible.release, runpy, sys; ansible.release.__version__='\"'2.12.0'; sys.argv=['ansible-playbook', '-i', '/workspace/repo/test/integration/inventory', '/workspace/repo/test/integration/targets/playbook/empty_hosts.yml']; runpy.run_path('/workspace/repo/bin/ansible-playbook', run_name='__main__')\\\" 2>&1)\nstatus=\"'$?\nprintf '\"'exit=%s\\\\n%s\\\\n' \\\"\"'$status\" \"$output\"\ntest \"$status\" -ne 0\nprintf '\"'%s\\\\n' \\\"\"'$output\" | grep -F \"ERROR! Hosts list cannot be empty. Please check your playbook\"'",
+          "exit_code": 1
+        },
+        {
+          "command": "/usr/bin/bash -lc 'set +e\noutput=$(PYTHONPATH=/workspace/repo/lib:/workspace/repo/test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -c \"import ansible, ansible.release, runpy, sys; ansible.__version__=ansible.release.__version__='\"'2.12.0'; sys.argv=['ansible-playbook', '-i', '/workspace/repo/test/integration/inventory', '/workspace/repo/test/integration/targets/playbook/empty_hosts.yml']; runpy.run_path('/workspace/repo/bin/ansible-playbook', run_name='__main__')\\\" 2>&1)\nstatus=\"'$?\nprintf '\"'exit=%s\\\\n%s\\\\n' \\\"\"'$status\" \"$output\"\ntest \"$status\" -ne 0\nprintf '\"'%s\\\\n' \\\"\"'$output\" | grep -F \"ERROR! Hosts list cannot be empty. Please check your playbook\"'",
+          "exit_code": 1
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '95,170p' lib/ansible/cli/arguments/option_helpers.py\nsed -n '1,150p' bin/ansible-playbook\nPYTHONPATH=lib LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -c \\\"import ansible, ansible.release; ansible.__version__=ansible.release.__version__='2.12.0'; import ansible.cli.arguments.option_helpers as o; print(ansible.__version__, ansible.release.__version__, o.__version__, o.version('x'))\\\"\"",
+          "exit_code": 1
+        },
+        {
+          "command": "/usr/bin/bash -lc 'set +e\noutput=$(PYTHONPATH=/workspace/repo/lib:/workspace/repo/test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -c \"import ansible.cli.arguments.option_helpers as o, runpy, sys; o._gitinfo=lambda: '\"''; sys.argv=['ansible-playbook', '-i', '/workspace/repo/test/integration/inventory', '/workspace/repo/test/integration/targets/playbook/empty_hosts.yml']; runpy.run_path('/workspace/repo/bin/ansible-playbook', run_name='__main__')\\\" 2>&1)\nstatus=\"'$?\nprintf '\"'exit=%s\\\\n%s\\\\n' \\\"\"'$status\" \"$output\"\ntest \"$status\" -ne 0\nprintf '\"'%s\\\\n' \\\"\"'$output\" | grep -F \"ERROR! Hosts list cannot be empty. Please check your playbook\"'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg -n -m 20 -F \\\"Hosts list cannot contain values of 'None'\\\" /workspace/public-docs/knowledge.txt /workspace/public-docs/index.json 2>/dev/null || true\nrg -n -m 20 \\\"from ansible\\\\..*collections import is_sequence\\\" lib/ansible/playbook lib/ansible | head -40\nfind lib test docs -type f -newermt '2026-09-25 00:00:00' -printf '%p\\\\n' 2>/dev/null | head -100\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -m pytest -q test/units/playbook/test_play.py test/units/playbook/test_playbook.py && PYTHONPATH=lib LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -m py_compile lib/ansible/playbook/play.py test/units/playbook/test_play.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -m pytest -q test/units/playbook/test_play.py test/units/playbook/test_playbook.py && PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -m pytest -q test/units/playbook'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/playbook/play.py",
+        "test/integration/targets/playbook/runme.sh",
+        "test/units/playbook/test_play.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-d81d35e5b8f1fbbbe0236b75-12c576c4",
+          "role": "existing_behavior",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-b004f844c9bd6572ec2e3250-60315b76",
+          "role": "existing_behavior",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "d30189b497b3b60413cbb6eba45cd1544bd435b452bb2852b946e3fe704fb7b0"
+  },
+  {
+    "task_id": "instance_ansible__ansible-cd473dfb2fdbc97acf3293c134b21cbbcfa89ec3-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+    "arm": "N",
+    "repeat": 1,
+    "functional": "FAIL",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"find lib/ansible/utils -maxdepth 2 -iname '*collection*' -print\nrg -n \\\"collection_loader\\\" lib test/units | head -100\nsed -n '70,105p' lib/ansible/module_utils/common/collections.py\nrg -n \\\"_validate_[a-z_]+\\\\(self, attr, name, value\\\\)\\\" test/units lib/ansible/playbook | head -100\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '1,220p' lib/ansible/utils/collection_loader/__init__.py\nsed -n '145,180p' lib/ansible/playbook/block.py\nsed -n '45,75p' lib/ansible/playbook/conditional.py\nrg -n \\\"binary_type|text_type\\\" lib/ansible/playbook/*.py | head -50\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/playbook/test_play.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc \"command -v python python3 pytest || true\nls -l /usr/bin/python* 2>/dev/null | head -30\nfind /usr /lib -name 'libpython3.11.so*' -print 2>/dev/null | head -30\nprintenv LD_LIBRARY_PATH || true\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python -m pytest -q test/units/playbook/test_play.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '1,80p' test/integration/targets/playbook/runme.sh\nrg -n \\\"Hosts list cannot be empty|hosts: *(\\\\[\\\\]|null|\"'$)\" test/units test/integration/targets/playbook | head -120\nLD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python -m pytest -q test/units/playbook/test_playbook.py test/units/playbook/test_base.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib /usr/local/bin/python - <<'PY'\nfrom ansible.module_utils.six import binary_type, string_types, text_type\nfrom ansible.module_utils.common.collections import is_sequence\nprint('string_types:', string_types)\nprint('bytes accepted:', isinstance(b'host', string_types))\nprint('bytes sequence:', is_sequence(b'host'))\nPY\nsed -n '20,145p' lib/ansible/playbook/play.py\nsed -n '20,105p' test/units/playbook/test_play.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '1,100p' test/lib/ansible_test/_data/legacy_collection_loader/__init__.py 2>/dev/null || true\nrg -n \\\"from ansible\\\\.utils\\\\.collection_loader import is_sequence|collection_loader\\\\.is_sequence\\\" . --glob '*.py' --glob '\"'!test/results/**'\"' | head -40\nrg -n \\\"binary_type\\\" lib/ansible/playbook lib/ansible/module_utils/six | head -40\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python -m pytest -q test/units/playbook\nLD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python - <<'PY'\nfrom ansible.errors import AnsibleParserError\nfrom ansible.playbook.play import Play\n\ncases = [\n    (None, 'Hosts list cannot be empty. Please check your playbook'),\n    (['ok', None], \\\"Hosts list cannot contain values of 'None'. Please check your playbook\\\"),\n    (['ok', {'bad': True}], \\\"Hosts list contains an invalid host value: '{'bad': True}'\\\"),\n    ({'bad': True}, 'Hosts list must be a sequence or string. Please check your playbook.'),\n]\nfor hosts, expected in cases:\n    try:\n        Play.load({'hosts': hosts})\n    except AnsibleParserError as exc:\n        assert expected in str(exc), (expected, str(exc))\n    else:\n        raise AssertionError('expected parser error for %r' % (hosts,))\nprint('direct malformed-host checks passed')\nPY\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python -m pytest -q test/units/playbook/test_play.py\nrg -n \\\"Hosts list cannot|def get_name|def _validate_hosts|data\\\\['name'\\\\]\\\" lib/ansible/playbook/play.py test/units/playbook/test_play.py test/integration/targets/playbook/runme.sh\"",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/playbook/play.py",
+        "test/integration/targets/playbook/runme.sh",
+        "test/units/playbook/test_play.py"
+      ],
+      "source_visibility": []
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": null
+  },
+  {
+    "task_id": "instance_ansible__ansible-cd473dfb2fdbc97acf3293c134b21cbbcfa89ec3-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+    "arm": "R",
+    "repeat": 1,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"find lib/ansible/utils -maxdepth 3 -iname '*collection*' -print\nfind lib/ansible -path '*collection_loader*' -type f -print\nsed -n '1,130p' lib/ansible/module_utils/common/collections.py\nsed -n '1,100p' lib/ansible/utils/collection_loader/__init__.py 2>/dev/null || true\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg -n \\\"Unexpected exception when specifying|Hosts list cannot contain|Hosts list contains an invalid|Hosts list must be a sequence\\\" /workspace/public-docs /workspace/repo || true\nfind test/integration/targets/playbook -maxdepth 2 -type f -name '*hosts*' -o -name 'empty_hosts.yml' | sort\nsed -n '1,80p' test/integration/targets/playbook/empty_hosts.yml 2>/dev/null || true\nrg -n \\\"AnsibleParserError.*assert|assertRaisesRegex|assertRaisesRegexp\\\" test/units/playbook/test_play.py test/units/playbook | head -60\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib python -m pytest -q test/units/playbook/test_play.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc \"command -v python || true\ncommand -v python3 || true\nls -l /usr/bin/python* 2>/dev/null | head -30\nfind /usr /lib -name 'libpython3.11.so*' -print 2>/dev/null | head -30\nfile \\\"\"'$(command -v python 2>/dev/null)\" 2>/dev/null || true\nfile \"$(command -v python3 2>/dev/null)\" 2>/dev/null || true'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib /usr/local/bin/python -m pytest -q test/units/playbook/test_play.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib /usr/local/bin/python -m pytest -q test/units/playbook/test_play.py test/units/playbook/test_playbook.py && LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib /usr/local/bin/python -m compileall -q lib/ansible/playbook/play.py lib/ansible/utils/collection_loader/__init__.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'set +e\nresult=$(LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib bin/ansible-playbook -i test/integration/inventory test/integration/targets/playbook/empty_hosts.yml 2>&1)\nstatus=$?\nset -e\nprintf '\"'%s\\\\n' \\\"\"'$result\"\nprintf '\"'exit_status=%s\\\\n' \\\"\"'$status\"\ntest \"$status\" -ne 0\nprintf '\"'%s\\\\n' \\\"\"'$result\" | grep -F \"ERROR! Hosts list cannot be empty. Please check your playbook\"'",
+          "exit_code": 1
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg -n \\\"\\\\.git/HEAD|git/HEAD|development version\\\" lib/ansible test | head -80\nsed -n '1,180p' lib/ansible/release.py\nsed -n '1,130p' lib/ansible/utils/collection_loader/__init__.py\nsed -n '85,155p' lib/ansible/playbook/play.py\nsed -n '20,95p' test/units/playbook/test_play.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'set +e\nLD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib bin/ansible-playbook -vvv -i test/integration/inventory test/integration/targets/playbook/empty_hosts.yml\nstatus=$?\nset -e\nprintf '\"'exit_status=%s\\\\n' \\\"\"'$status\"'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib /usr/local/bin/python -m pytest -q test/units/playbook'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"find lib test -type f \\\\( -name '*.pyc' -o -name '*.pyo' \\\\) -mmin -60 -print | head -100\nstat -c '%y %n' lib/ansible/playbook/play.py lib/ansible/utils/collection_loader/__init__.py test/units/playbook/test_play.py test/integration/targets/playbook/runme.sh\nLD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib /usr/local/bin/python - <<'PY'\nfrom ansible.errors import AnsibleParserError\nfrom ansible.playbook.play import Play\n\ncases = [\n    ({}, ''),\n    ({'hosts': ['one', 'two']}, 'one,two'),\n    ({'hosts': 'one'}, 'one'),\n    ({'name': 'explicit', 'hosts': ['one']}, 'explicit'),\n]\nfor data, expected in cases:\n    original = data.copy()\n    assert Play.load(data).get_name() == expected\n    assert data == original\n\nerrors = [\n    ({'hosts': None}, 'Hosts list cannot be empty. Please check your playbook'),\n    ({'hosts': []}, 'Hosts list cannot be empty. Please check your playbook'),\n    ({'hosts': ['one', None]}, \\\"Hosts list cannot contain values of 'None'. Please check your playbook\\\"),\n    ({'hosts': ['one', {}]}, \\\"Hosts list contains an invalid host value: '{}'\\\"),\n    ({'hosts': 1}, 'Hosts list must be a sequence or string. Please check your playbook.'),\n]\nfor data, expected in errors:\n    try:\n        Play.load(data)\n    except AnsibleParserError as exc:\n        assert expected in str(exc), (expected, str(exc))\n    else:\n        raise AssertionError('accepted invalid hosts: %r' % data)\nprint('behavior matrix passed')\nPY\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rm lib/ansible/playbook/__pycache__/play.cpython-311.pyc lib/ansible/utils/collection_loader/__pycache__/__init__.cpython-311.pyc\nfind lib test -type f \\\\( -name '*.pyc' -o -name '*.pyo' \\\\) -mmin -60 -print\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=lib:test/lib /usr/local/bin/python -m pytest -q test/units/playbook/test_play.py test/units/playbook/test_playbook.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=lib:test/lib /usr/local/bin/python -m pytest -q test/units/playbook'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/playbook/play.py",
+        "lib/ansible/utils/collection_loader/__init__.py",
+        "test/integration/targets/playbook/runme.sh",
+        "test/units/playbook/test_play.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-9ccda5d5cd517b3eb3bacb64",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-bde3c614b500035aa82b13d7",
+          "role": "public_test_example",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-ffa2a9d753d9b007b1d846f4",
+          "role": "existing_behavior",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "2084601ef6345ed0090a33f3f5467ba8a749d1594ffb7967ce8765e3558feb80"
+  },
+  {
+    "task_id": "instance_ansible__ansible-cd473dfb2fdbc97acf3293c134b21cbbcfa89ec3-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+    "arm": "M",
+    "repeat": 2,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"find lib/ansible/utils -maxdepth 2 -iname '*collection*' -print\nrg -n \\\"collection_loader\\\" lib test/units | head -100\nsed -n '70,110p' lib/ansible/module_utils/common/collections.py\nsed -n '1,100p' lib/ansible/utils/collection_loader/__init__.py 2>/dev/null || true\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg -n \\\"Hosts list cannot contain|Hosts list must be a sequence|invalid host value\\\" /workspace/public-docs /workspace/repo 2>/dev/null | head -100\nrg -n '\\\"name\\\"|_name = FieldAttribute|FieldAttribute.*name' lib/ansible/playbook/base.py lib/ansible/playbook/*.py | head -60\nsed -n '1,80p' lib/ansible/playbook/base.py\nsed -n '1,75p' lib/ansible/module_utils/common/collections.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch python -m pytest -q test/units/playbook/test_play.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc \"command -v -a python python3 python3.11 python3.12 pytest || true\nls -l /usr/bin/python* /usr/local/bin/python* 2>/dev/null || true\nfind /usr /lib -name 'libpython3.11.so*' -o -name 'libpython3.12.so*' 2>/dev/null | head -40\nprintenv | rg '\"'^(LD_LIBRARY_PATH|PATH|PYTHON)'\"' || true\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -m pytest -q test/units/playbook/test_play.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -m pytest -q test/units/playbook'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '1,90p' test/integration/targets/playbook/runme.sh\nfind test/integration/targets/playbook -maxdepth 2 -type f -print | sort\nrg -n \\\"Hosts list cannot be empty|hosts:.*(null|none)|invalid host\\\" test/integration test/units lib/ansible/playbook/play.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python3.11 bin/ansible-test integration playbook --color no'",
+          "exit_code": 1
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=/workspace/repo/lib:/workspace/repo/test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch PATH=/workspace/repo/bin:/usr/local/bin:/usr/bin:/bin bash runme.sh'",
+          "exit_code": 250
+        },
+        {
+          "command": "/usr/bin/bash -lc 'PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch LD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -m pytest -q test/units/playbook'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python3.11 - <<'PY'\nfrom ansible.errors import AnsibleParserError\nfrom ansible.parsing.dataloader import DataLoader\nfrom ansible.playbook import Playbook\n\nloader = DataLoader()\ncases = (\n    (b'- hosts: [web, {bad: host}]\\\\n  tasks: []\\\\n', \\\"Hosts list contains an invalid host value: '{'bad': 'host'}'\\\"),\n    (b'- hosts:\\\\n  tasks: []\\\\n', 'Hosts list cannot be empty. Please check your playbook'),\n)\nfor source, expected in cases:\n    path = loader.path_dwim('/workspace/scratch/hosts-validation.yml')\n    loader.set_vault_secrets(None)\n    with open(path, 'wb') as stream:\n        stream.write(source)\n    try:\n        Playbook.load(path, loader=loader)\n    except AnsibleParserError as exc:\n        assert expected in str(exc), str(exc)\n    else:\n        raise AssertionError('invalid hosts were accepted')\nprint('direct playbook parser checks passed')\nPY\"",
+          "exit_code": 1
+        },
+        {
+          "command": "/usr/bin/bash -lc \"LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp HOME=/workspace/scratch /usr/local/bin/python3.11 - <<'PY'\nfrom ansible.errors import AnsibleParserError\nfrom ansible.playbook.play import Play\n\ninvalid = (\n    (None, 'Hosts list cannot be empty. Please check your playbook'),\n    ([], 'Hosts list cannot be empty. Please check your playbook'),\n    (['web', None], \\\"Hosts list cannot contain values of 'None'. Please check your playbook\\\"),\n    (['web', {'bad': 'host'}], 'Hosts list contains an invalid host value:'),\n    (42, 'Hosts list must be a sequence or string. Please check your playbook.'),\n)\nfor hosts, expected in invalid:\n    try:\n        Play.load({'hosts': hosts})\n    except AnsibleParserError as exc:\n        assert expected in str(exc), (expected, str(exc))\n    else:\n        raise AssertionError('invalid hosts accepted: %r' % (hosts,))\ndata = {'hosts': ('web', 'db')}\nplay = Play.load(data)\nassert play.get_name() == 'web,db'\nassert data == {'hosts': ('web', 'db')}\nassert Play.load({}).get_name() == ''\nprint('direct Play validation checks passed')\nPY\nLD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 -m py_compile lib/ansible/playbook/play.py test/units/playbook/test_play.py\"",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/playbook/play.py",
+        "test/integration/targets/playbook/runme.sh",
+        "test/units/playbook/test_play.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-d81d35e5b8f1fbbbe0236b75-12c576c4",
+          "role": "existing_behavior",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-b004f844c9bd6572ec2e3250-60315b76",
+          "role": "existing_behavior",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "d30189b497b3b60413cbb6eba45cd1544bd435b452bb2852b946e3fe704fb7b0"
+  },
+  {
+    "task_id": "instance_ansible__ansible-cd473dfb2fdbc97acf3293c134b21cbbcfa89ec3-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+    "arm": "N",
+    "repeat": 2,
+    "functional": "FAIL",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"find lib/ansible/utils -maxdepth 2 -iname '*collection*' -print\nfind lib/ansible -path '*collection_loader*' -print\nsed -n '70,105p' lib/ansible/module_utils/common/collections.py\nrg -n \\\"collection_loader import|utils.collection_loader\\\" lib test | head -100\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '1,100p' lib/ansible/utils/collection_loader/__init__.py\nrg -n \\\"Hosts list cannot be empty\\\" test/integration/targets/playbook -C 5\nrg -n \\\"binary_type|text_type\\\" lib/ansible/playbook/*.py | head -40\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib python -m pytest -q test/units/playbook/test_play.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc \"command -v -a python python3 pytest || true\nls -l /usr/bin/python* /usr/local/bin/python* 2>/dev/null || true\nfind /usr /lib -name 'libpython3*.so*' -print 2>/dev/null | head -40\nhead -1 \\\"\"'$(command -v pytest 2>/dev/null)\" 2>/dev/null || true'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib /usr/local/bin/python3.11 -m pytest -q test/units/playbook/test_play.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib /usr/local/bin/python3.11 -m pytest -q test/units/playbook/test_play.py test/units/playbook/test_playbook.py test/units/playbook/test_base.py && LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib /usr/local/bin/python3.11 -m compileall -q lib/ansible/playbook/play.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '15,155p' lib/ansible/playbook/play.py\nsed -n '20,125p' test/units/playbook/test_play.py\nsed -n '28,42p' test/integration/targets/playbook/runme.sh\nfind lib test docs -type f -newermt '2026-09-25 00:00:00' -print | head -100\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'unlink /workspace/repo/lib/ansible/playbook/__pycache__/play.cpython-311.pyc'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib PATH=/workspace/repo/bin:$PATH ansible-playbook -i test/integration/inventory test/integration/targets/playbook/empty_hosts.yml'",
+          "exit_code": 250
+        },
+        {
+          "command": "/usr/bin/bash -lc \"find lib test docs -type f -newermt '2026-09-25 00:00:00' -print | sort\nfind lib test -type d -name __pycache__ -newermt '2026-09-25 00:00:00' -print | head -80\ncommand -v flake8 || true\ncommand -v pyflakes || true\ncommand -v pylint || true\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'rg -n \"Unexpected exception when specifying an invalid hosts|Hosts list cannot contain values|_validate_hosts|Hosts list must be a sequence\" /workspace/public-docs /workspace/repo 2>/dev/null | head -100'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'LD_LIBRARY_PATH=/usr/local/lib HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=lib:test/lib /usr/local/bin/python3.11 -m pytest -q test/units/playbook/test_play.py test/units/playbook/test_playbook.py test/units/playbook/test_base.py'",
+          "exit_code": 0
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/playbook/play.py",
+        "test/integration/targets/playbook/runme.sh",
+        "test/units/playbook/test_play.py"
+      ],
+      "source_visibility": []
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": null
+  },
+  {
+    "task_id": "instance_ansible__ansible-cd473dfb2fdbc97acf3293c134b21cbbcfa89ec3-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+    "arm": "R",
+    "repeat": 2,
+    "functional": "PASS",
+    "observed_behavior": {
+      "completed_commands": [
+        {
+          "command": "/usr/bin/bash -lc \"find lib/ansible/utils -maxdepth 2 -iname '*collection*' -print\nrg -n \\\"collection_loader import|from ansible\\\\.utils\\\\.collection_loader\\\" lib test | head -80\nsed -n '70,105p' lib/ansible/module_utils/common/collections.py\nsed -n '1,100p' lib/ansible/utils/collection_loader/__init__.py 2>/dev/null || true\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib python -m pytest -q test/units/playbook/test_play.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp PYTHONPATH=lib:test/lib /usr/bin/python3 -m pytest -q test/units/playbook/test_play.py'",
+          "exit_code": 127
+        },
+        {
+          "command": "/usr/bin/bash -lc \"command -v -a python python3 pytest || true\nfind /usr /bin -maxdepth 4 -type f \\\\( -name 'python3*' -o -name 'libpython3*.so*' -o -name 'pytest' \\\\) 2>/dev/null | head -100\nls -l \\\"\"'$(command -v python 2>/dev/null)\" 2>/dev/null || true\nldd \"$(command -v python 2>/dev/null)\" 2>/dev/null || true'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'ls -l /usr/local/bin/python* /usr/local/lib/libpython3*.so*\nfile /usr/local/bin/python3.11 /usr/local/bin/python3.12\nLD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.11 --version\nLD_LIBRARY_PATH=/usr/local/lib /usr/local/bin/python3.12 --version'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'mkdir -p /workspace/scratch/ansible-tmp && HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib /usr/local/bin/python3.11 -m pytest -q test/units/playbook/test_play.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib /usr/local/bin/python3.11 -m pytest -q test/units/playbook/test_base.py test/units/playbook/test_play.py test/units/playbook/test_playbook.py\nLD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib /usr/local/bin/python3.11 -m compileall -q lib/ansible/playbook/play.py lib/ansible/utils/collection_loader/__init__.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"find lib test -type f \\\\( -name '*.pyc' -o -name '*.pyo' \\\\) -mmin -30 -print | head -200\nsed -n '20,145p' lib/ansible/playbook/play.py\nsed -n '1,35p' lib/ansible/utils/collection_loader/__init__.py\nsed -n '25,85p' test/units/playbook/test_play.py\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"unlink /workspace/repo/lib/ansible/playbook/__pycache__/play.cpython-311.pyc\nunlink /workspace/repo/lib/ansible/utils/collection_loader/__pycache__/__init__.cpython-311.pyc\nfind lib test -type f \\\\( -name '*.pyc' -o -name '*.pyo' \\\\) -mmin -30 -print\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3.11 - <<'PY'\nfrom ansible.errors import AnsibleParserError\nfrom ansible.playbook.play import Play\n\nsource = {'hosts': ['one', 'two']}\nplay = Play.load(source)\nassert source == {'hosts': ['one', 'two']}\nassert play.get_name() == 'one,two'\nplay.hosts.append('three')\nassert play.get_name() == 'one,two,three'\nassert Play.load({}).get_name() == ''\nassert Play.load({'hosts': b'host'}).get_name() == b'host'\nassert Play.load({'hosts': [b'one', 'two']}).get_name() == 'one,two'\n\ncases = [\n    ({'hosts': None}, 'Hosts list cannot be empty. Please check your playbook'),\n    ({'hosts': []}, 'Hosts list cannot be empty. Please check your playbook'),\n    ({'hosts': ['one', None]}, \\\"Hosts list cannot contain values of 'None'. Please check your playbook\\\"),\n    ({'hosts': ['one', 2]}, \\\"Hosts list contains an invalid host value: '2'\\\"),\n    ({'hosts': 2}, 'Hosts list must be a sequence or string. Please check your playbook.'),\n]\nfor data, expected in cases:\n    try:\n        Play.load(data)\n    except AnsibleParserError as exc:\n        assert expected in str(exc), (expected, str(exc))\n    else:\n        raise AssertionError('expected AnsibleParserError for %r' % data)\nprint('direct behavior checks passed')\nPY\nfind lib test -type f \\\\( -name '*.pyc' -o -name '*.pyo' \\\\) -mmin -10 -print\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"rg -n \\\"Hosts list cannot contain|Hosts list contains an invalid|Hosts list must be a sequence|def _validate_hosts\\\" /workspace/public-docs /workspace/repo 2>/dev/null\nrg -n 'collection_loader.*is_sequence|is_sequence.*collection_loader' /workspace/public-docs/knowledge.txt /workspace/public-docs/index.json 2>/dev/null | head -40\nsed -n '1,125p' lib/ansible/module_utils/common/collections.py\nsed -n '1,130p' lib/ansible/module_utils/six/__init__.py 2>/dev/null | rg -n \\\"binary_type|string_types|text_type\\\"\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '360,470p' lib/ansible/playbook/base.py\nsed -n '1,180p' lib/ansible/playbook/attribute.py\nrg -n \\\"listof\\\" lib/ansible/playbook/base.py test/units/playbook/test_base.py | head -80\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3.11 -m pytest -q test/units/utils/collection_loader/test_collection_loader.py test/units/playbook/test_play.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib:test/lib PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3.11 -m pytest -q test/units/playbook/test_base.py test/units/playbook/test_play.py test/units/playbook/test_playbook.py test/units/utils/collection_loader/test_collection_loader.py'",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc \"sed -n '1,90p' test/integration/targets/playbook/runme.sh\nfind test/integration/targets/playbook -maxdepth 2 -type f | sort | head -80\nrg -n \\\"Hosts list cannot be empty\\\" test lib\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/usr/bin/bash -lc 'set +e\noutput=$(HOME=/workspace/scratch ANSIBLE_LOCAL_TEMP=/workspace/scratch/ansible-tmp LD_LIBRARY_PATH=/usr/local/lib PYTHONPATH=lib PYTHONDONTWRITEBYTECODE=1 /usr/local/bin/python3.11 bin/ansible-playbook -i test/integration/inventory test/integration/targets/playbook/empty_hosts.yml 2>&1)\nstatus=$?\nset -e\nprintf '\"'%s\\\\n' \\\"\"'$output\"\ntest \"$status\" -ne 0\nprintf '\"'%s\\\\n' \\\"\"'$output\" | grep -F \"ERROR! Hosts list cannot be empty. Please check your playbook\"\nfind lib test -type f '\"\\\\( -name '*.pyc' -o -name '*.pyo' \\\\) -mmin -10 -print\"",
+          "exit_code": 1
+        }
+      ],
+      "changed_files": [
+        "lib/ansible/playbook/play.py",
+        "lib/ansible/utils/collection_loader/__init__.py",
+        "test/integration/targets/playbook/runme.sh",
+        "test/units/playbook/test_play.py"
+      ],
+      "source_visibility": [
+        {
+          "unit_id": "local-9ccda5d5cd517b3eb3bacb64",
+          "role": "documented_contract",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        },
+        {
+          "unit_id": "local-d81d35e5b8f1fbbbe0236b75-12c576c4",
+          "role": "existing_behavior",
+          "visibility": "not_observed_in_visible_prefix",
+          "criterion": "exact source excerpt in recorded visible prefix; not a model-knowledge claim"
+        }
+      ]
+    },
+    "usage_claim": "Visible input/read/code evidence only; internal causal usage unknown",
+    "pack_sha256": "0d20cd669f1216767140ece6bf4abc1091d62631d745f4ecee3fb24bdffd1b23"
+  }
+]
