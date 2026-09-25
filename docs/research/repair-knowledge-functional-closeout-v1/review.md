@@ -27,3 +27,7 @@
 最终完整tracked delta从`b6d9316d6edd84d1a70543f290aaf3f00f7f5b90`计算；新鲜SHA-256记录保存在私有closeout证据，最终答复报告结果。不归档或删除旧研究，不合并、不ready、不发布，交付后停止自动实验。
 
 首轮GitHub CI `36091943800`：静态集成、OpenSpec、release、diagnostic和external-pack通过，但轻量pytest有2失败、1601通过、3跳过。两项新增隔离/后备单元测试意外依赖未安装的可选tiktoken；修复仅在测试中显式注入计数器，不修改正式方法源码或冻结结果。用`sys.modules['tiktoken']=None`运行本文件6项测试全部通过。GitHub步骤的continue-on-error展示不作为通过证据，后续以原始测试结果及汇总终态核对。
+
+CI修复提交`f44e56633db88731e960bb62776d0cb616a69d4b`的[Validate运行36092185225](https://github.com/Raidriar7170/hermes-skilleval/actions/runs/36092185225)已通过：1603 passed、3个可选测试skipped，45项OpenSpec通过，所有既有门禁完成。`ALLOW_MERGE`只是仓库软件门禁的既有字段，不授权本研究合并或晋升。后续收束记录提交仍须由它自己的精确head检查确认。
+
+[Draft PR #56](https://github.com/Raidriar7170/hermes-skilleval/pull/56)叠加PR #55，base仍为`codex/hermes-relation-applicability-query`。首次Git推送因本机旧代理端口不可用而失败，仅以命令级`git -c http.proxy= -c https.proxy= push`恢复，未修改全局配置。最终工作树保留全部研究记录，自动实验到此停止。
