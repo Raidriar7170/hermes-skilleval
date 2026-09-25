@@ -5,7 +5,7 @@
 - [x] 2.1 Implement public-input R adapter and N/M/R runner with complete own-cost accounting.
 - [x] 2.2 Verify focused invariants and perform at most one old-state relation rehearsal.
 ## 3. Freeze and execute
-- [ ] 3.1 Freeze one plan, roster, method identity, assets and trusted overlays.
+- [x] 3.1 Freeze one plan, roster, method identity, assets and trusted overlays.
 - [ ] 3.2 Execute unique public prefixes, independent R acquisitions and fixed tails, preserving unknown cells.
 ## 4. Accept and deliver
 - [ ] 4.1 Reconstruct original candidates and execute trusted target/protected checks after all attempts end.
