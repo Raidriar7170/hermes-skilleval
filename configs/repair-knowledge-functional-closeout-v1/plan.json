@@ -1,0 +1,97 @@
+{
+  "study": "repair-knowledge-functional-closeout-v1",
+  "status": "DEVELOPMENT_NOT_FROZEN",
+  "baseline": "b6d9316d6edd84d1a70543f290aaf3f00f7f5b90",
+  "scope": "preregistered_small_sample_matched_prefix_study",
+  "primary_outcome": "target_and_protected_regression",
+  "primary_contrast": "R_minus_M",
+  "secondary_contrast": "R_minus_N",
+  "arms": [
+    "N",
+    "M",
+    "R"
+  ],
+  "tasks": [
+    {
+      "instance_id": "instance_ansible__ansible-1ee70fc272aff6bf3415357c6e13c5de5b928d9b-v1055803c3a812189a1133297f7f5468579283f86",
+      "repo": "ansible/ansible",
+      "base_commit": "9281148b623d4e2e8302778d91af3e84ab9579a9",
+      "mechanism": "python-identifier-validation",
+      "prior_use": "EXPLORATORY_REUSE_CONFIRMATION",
+      "queue_position": 2
+    },
+    {
+      "instance_id": "instance_ansible__ansible-3db08adbb1cc6aa9941be5e0fc810132c6e1fa4b-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+      "repo": "ansible/ansible",
+      "base_commit": "709484969c8a4ffd74b839a673431a8c5caa6457",
+      "mechanism": "filter-attribute-forwarding",
+      "prior_use": "EXPLORATORY_REUSE_CONFIRMATION",
+      "queue_position": 3
+    },
+    {
+      "instance_id": "instance_ansible__ansible-3b823d908e8a5d17674f8c26d337d3114b7493b1-v0f01c69f1e2528b935359cfe578530722bca2c59",
+      "repo": "ansible/ansible",
+      "base_commit": "92df66480613d0f3c1f11ab27146e3162d2a5bd5",
+      "mechanism": "variable-file-cache",
+      "prior_use": "EXPLORATORY_REUSE_CONFIRMATION",
+      "queue_position": 4
+    },
+    {
+      "instance_id": "instance_ansible__ansible-cd473dfb2fdbc97acf3293c134b21cbbcfa89ec3-vba6da65a0f3baefda7a058ebbd0a8dcafb8512f5",
+      "repo": "ansible/ansible",
+      "base_commit": "e8ae7211dabbd07093f50d6dfb383da3bb14f13d",
+      "mechanism": "invalid-host-field-errors",
+      "prior_use": "EXPLORATORY_REUSE_DEV",
+      "queue_position": 5
+    }
+  ],
+  "tasks_target": 4,
+  "tasks_max_before_sampling": 6,
+  "repeats_per_task_arm": 2,
+  "public_prefixes_per_task": 1,
+  "repair_total_active_seconds": 600,
+  "index_scenario": "warm_index",
+  "preprocessing_accounting": "own_method_cost",
+  "candidate_cap": 24,
+  "guidance_token_cap": 1200,
+  "max_pack_units": 4,
+  "explicit_interventions_per_tail_max": 1,
+  "R_query_method": "PR55_R_weighted_pair_relevance_with_requirement_round_robin",
+  "R_relation_budget_seconds_max": 60,
+  "R_unique_pair_cap": 48,
+  "R_transport": "final_PR55_fixed_startup_guard_and_frozen_cost_envelope",
+  "reference_QJ_preload": false,
+  "exclude_same_pack_tasks": false,
+  "exclude_native_success_tasks": false,
+  "new_training": false,
+  "generic_reminder_arm": false,
+  "seed": 20260924,
+  "default_policy": "UNCHANGED",
+  "model": "gpt-5.6-sol",
+  "effort": "medium",
+  "codex_version": "codex-cli 0.154.0",
+  "image": "hermes-repair-knowledge-executor:v1",
+  "image_id": "sha256:94df6dc8529a805f77b6410007bce1d0f9f0361dad6bf2bcde0930061ec0011b",
+  "representation": {
+    "encoder": "sentence-transformers/all-MiniLM-L6-v2",
+    "revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    "files": {
+      "model.safetensors": "53aa51172d142c89d9012cce15ae4d6cc0ca6895895114379cacb4fab128d9db",
+      "tokenizer_config.json": "acb92769e8195aabd29b7b2137a9e6d6e25c476a4f15aa4355c233426c61576b",
+      "special_tokens_map.json": "303df45a03609e4ead04bc3dc1536d0ab19b5358db685b6f3da123d05ec200e3",
+      "config.json": "953f9c0d463486b10a6871cc2fd59f223b2c70184f49815e7efbcab5d8908b41",
+      "tokenizer.json": "be50c3628f2bf5bb5e3a7f17b1f74611b2561a3a27eeab05e5aa30f411572037",
+      "vocab.txt": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3"
+    },
+    "dimensions": 384,
+    "encoding": "CompleteEncoder: complete text split into max_length minus special-token chunks and token-count-weighted normalized mean; no truncation",
+    "dynamic_retrieval": "full public requirement queries with current grounded observation links; fixed 0.3 lexical, 0.6 vector, 0.1 symbol"
+  },
+  "cost_model_sha256": "4501c20ed987d7199a4bcd36a52e889c4492f1a03ecdd3e5bbfc524dbe09c1ab",
+  "task_roster_sha256": "c6e65b834998385315c864874f7574c8c80b4db6cd81f60147b48d9b681fe4a4",
+  "qualification_summary_sha256": "33a5c63daec4bf8bc300de9b34dc2663e0dc65db4120d8b07897a9ab1465d24d",
+  "coverage_limits": [
+    "Exploratory reuse of prior registered mechanisms",
+    "Python 3 runtime only; no Python 2 execution claim"
+  ]
+}

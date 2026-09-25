@@ -433,15 +433,48 @@ def connection_streak(previous, count, status, error):
 
 def run_policy(root, name, method, out, *, sealed=None):
     ledger, pool, features, panel_rows = state(root, name)
+    return run_public_policy(
+        ledger,
+        pool,
+        features,
+        read(root / "cost-model.json"),
+        out,
+        method=method,
+        seconds=60,
+        sealed=sealed,
+        panel_rows=panel_rows,
+        name=name,
+    )
+
+
+def run_public_policy(
+    ledger,
+    pool,
+    features,
+    model,
+    out,
+    *,
+    method="R",
+    seconds=60,
+    sealed=None,
+    panel_rows=(),
+    name="public-state",
+):
+    """Run the inherited query/selection chain using only explicit public inputs.
+
+    No prior study directory, reference table or source-audit result is loaded.
+    Each output directory reserves an independent acquisition with an empty store.
+    """
+    if not 0 <= seconds <= 60:
+        raise ValueError("Relation budget must be within zero to sixty seconds")
     out.mkdir(parents=True, exist_ok=False)
     start = time.monotonic()
-    deadline = start + 60 if sealed is None else None
+    deadline = start + seconds if sealed is None else None
     store = RelationStore(out / "store.json", ledger, pool, prompt=QUERY_PROMPT)
     selector = ExactSelector(pool, ledger, deadline=deadline)
     pack, result = selector.solve(store, deadline=deadline)
     atomic_json(out / "mmr.json", selector.mmr.to_dict())
-    model = read(root / "cost-model.json")
-    envelope = CostEnvelope(model["observations"], model["lifecycle"])
+    envelope = CostEnvelope(list(model["observations"]), model["lifecycle"])
     domain = {tuple(r["pair"]) for r in panel_rows} if sealed else None
 
     def length(pairs):
