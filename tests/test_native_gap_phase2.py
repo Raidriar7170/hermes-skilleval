@@ -9,6 +9,7 @@ import time
 SPEC = importlib.util.spec_from_file_location(
     "phase2", Path(__file__).parents[1] / "scripts/native_gap_phase2.py"
 )
+assert SPEC is not None and SPEC.loader is not None
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 
