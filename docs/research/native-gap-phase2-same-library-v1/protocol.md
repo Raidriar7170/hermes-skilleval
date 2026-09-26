@@ -63,3 +63,5 @@ MiniLM 使用既有 `1110a243fdf4706b3f48f1d95db1a4f5529b4d41` snapshot，元数
 执行模型为 `gpt-6-sol / high`，Linux 官方客户端 `0.155.0-alpha.16.4`；宿主 Python 3.12.2，Docker daemon 为 arm64，任务镜像为 amd64 仿真。镜像身份用不可变 image ID 绑定。运行器没有额外禁用原生子任务功能；本轮未专门验证子任务工作流，不将配置保留称为能力已实测。正式有效配置确认 memories=false 且 use/generate 均 false。系统资源可读与依赖外网的系统技能工作流可执行分别限定。
 
 [Draft PR #58](https://github.com/Raidriar7170/hermes-skilleval/pull/58) 叠加于未合并的 #57。测试入口修补提交 `07705d4a413453ad9b5b5bfc0ccb8899e9e204d2` 的 [CI](https://github.com/Raidriar7170/hermes-skilleval/actions/runs/36218694350) 为 1616 passed / 3 skipped、OpenSpec 47/47、静态检查无新增；最终交付 HEAD 的状态以 PR 和最终回复为准。软件门禁不授权合并。
+
+结果提交 `88f465fb4e6c9ff6895e0fdfe00b527bbf075245` 的 [CI](https://github.com/Raidriar7170/hermes-skilleval/actions/runs/36221380154) 全部门禁通过。`run-audit.json` 补存 16 个唯一线程、逐格有效记忆配置、单一发现目录身份、对称提示前缀、顺序执行与原候选身份的机械核对。交付记录提交不改变研究方法或运行结果；最终全范围 SHA 校验记录留在本机私有证据目录，摘要与最终 HEAD 的 CI 链接写入 PR 和最终回复。

@@ -12,4 +12,4 @@
 - [x] 3.2 Reconstruct every candidate and record trusted target/protected checks with UNKNOWN preserved.
 ## 4. Delivery
 - [x] 4.1 Write both full result tables, up to three evidence cases and one next research decision.
-- [ ] 4.2 Complete independent read-only review, required tests, final SHA closure and exact-head CI; publish stacked Draft PR only.
+- [x] 4.2 Complete independent read-only review, required tests, final SHA closure and exact-head CI; publish stacked Draft PR only.
