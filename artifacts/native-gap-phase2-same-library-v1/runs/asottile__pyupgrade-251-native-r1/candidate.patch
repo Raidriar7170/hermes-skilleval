@@ -1,0 +1,73 @@
+diff --git a/pyupgrade.py b/pyupgrade.py
+index 6f99694..0c8aa4a 100644
+--- a/pyupgrade.py
++++ b/pyupgrade.py
+@@ -1239,7 +1239,7 @@ class FindPy3Plus(ast.NodeVisitor):
+         self.six_remove_decorators = set()  # type: Set[Offset]
+         self.six_simple = {}  # type: Dict[Offset, NameOrAttr]
+         self.six_type_ctx = {}  # type: Dict[Offset, NameOrAttr]
+-        self.six_with_metaclass = set()  # type: Set[Offset]
++        self.six_with_metaclass = {}  # type: Dict[Offset, Tuple[int, ...]]
+ 
+         self._class_info_stack = []  # type: List[FindPy3Plus.ClassInfo]
+         self._in_comp = 0
+@@ -1336,7 +1336,10 @@ class FindPy3Plus(ast.NodeVisitor):
+                 self._is_six(node.bases[0].func, ('with_metaclass',)) and
+                 not _starargs(node.bases[0])
+         ):
+-            self.six_with_metaclass.add(_ast_to_offset(node.bases[0]))
++            self.six_with_metaclass[_ast_to_offset(node.bases[0])] = tuple(
++                i for i, arg in enumerate(node.bases[0].args)
++                if i and isinstance(arg, ast.Name) and arg.id == 'object'
++            )
+ 
+         self._class_info_stack.append(FindPy3Plus.ClassInfo(node.name))
+         self.generic_visit(node)
+@@ -2037,6 +2040,16 @@ def _fix_py3_plus(contents_text):  # type: (str) -> str
+         elif token.offset in visitor.six_with_metaclass:
+             j = _find_open_paren(tokens, i)
+             func_args, end = _parse_call_args(tokens, j)
++            for arg_i in reversed(visitor.six_with_metaclass[token.offset]):
++                right = func_args[arg_i][1]
++                if (
++                        arg_i == len(func_args) - 1 and
++                        tokens[right].src == ',' and
++                        not tokens_to_src(tokens[right + 1:end - 1]).strip()
++                ):
++                    right += 1
++                del tokens[func_args[arg_i - 1][1]:right]
++            func_args, end = _parse_call_args(tokens, j)
+             if len(func_args) == 1:
+                 tmpl = WITH_METACLASS_NO_BASES_TMPL
+             else:
+diff --git a/tests/six_test.py b/tests/six_test.py
+index c58f5fc..675403d 100644
+--- a/tests/six_test.py
++++ b/tests/six_test.py
+@@ -260,6 +260,26 @@ def test_fix_six_noop(s):
+ 
+             'class C(B, metaclass=M): pass',
+         ),
++        (
++            'class C(six.with_metaclass(abc.ABCMeta, object)): pass',
++
++            'class C(metaclass=abc.ABCMeta): pass',
++        ),
++        (
++            'class C(six.with_metaclass(M, object, B)): pass',
++
++            'class C(B, metaclass=M): pass',
++        ),
++        (
++            'class C(six.with_metaclass(M, B, (object))): pass',
++
++            'class C(B, metaclass=M): pass',
++        ),
++        (
++            'class C(six.with_metaclass(M, object,)): pass',
++
++            'class C(metaclass=M): pass',
++        ),
+         (
+             'from six import with_metaclass\n'
+             'class C(with_metaclass(M, B)): pass\n',

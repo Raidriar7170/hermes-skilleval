@@ -1,0 +1,60 @@
+{
+  "id": "encode__httpx-2523-native-r2",
+  "instance_id": "encode__httpx-2523",
+  "functional_result": "FAIL",
+  "candidate_sha256": "9615f4cfe7ba3543a7235f085e3f33bb8490b6ecb3fd244091124490ba318926",
+  "candidate_bytes": 8908,
+  "returncode": 1,
+  "offline_seconds": 2.2295487079536542,
+  "author_label_checks": {
+    "FAIL_TO_PASS": {
+      "tests/models/test_queryparams.py::test_invalid_query_params": "FAILED",
+      "tests/models/test_queryparams.py::test_queryparam_update_is_hard_deprecated": "PASSED",
+      "tests/models/test_queryparams.py::test_queryparam_setter_is_hard_deprecated": "PASSED",
+      "tests/models/test_queryparams.py::test_queryparam_set": "PASSED",
+      "tests/models/test_queryparams.py::test_queryparam_add": "PASSED",
+      "tests/models/test_queryparams.py::test_queryparam_remove": "PASSED",
+      "tests/models/test_queryparams.py::test_queryparam_merge": "PASSED",
+      "tests/models/test_queryparams.py::test_queryparams_are_hashable": "PASSED"
+    },
+    "PASS_TO_PASS": {
+      "tests/models/test_queryparams.py::test_queryparams[a=123&a=456&b=789]": "PASSED",
+      "tests/models/test_queryparams.py::test_queryparams[source1]": "PASSED",
+      "tests/models/test_queryparams.py::test_queryparams[source2]": "PASSED",
+      "tests/models/test_queryparams.py::test_queryparams[source3]": "PASSED",
+      "tests/models/test_queryparams.py::test_queryparams[source4]": "PASSED",
+      "tests/models/test_queryparams.py::test_queryparam_types": "PASSED",
+      "tests/models/test_queryparams.py::test_empty_query_params": "PASSED"
+    }
+  },
+  "junit_counts": {
+    "tests": 15,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0
+  },
+  "import_verified": true,
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "--name",
+    "hermes-phase2-check-encode__httpx-2523-native-r2",
+    "--platform",
+    "linux/amd64",
+    "--network",
+    "none",
+    "--memory",
+    "4g",
+    "--cpus",
+    "2",
+    "-v",
+    "$PRIVATE/checks/encode__httpx-2523-native-r2:/evidence",
+    "--entrypoint",
+    "/bin/bash",
+    "sha256:88db7f8cf7d9c5f9ae48ab26764a348604da6c300ee5213c56e2c79ca3073110",
+    "-lc",
+    "set -e\nsource /opt/miniconda3/bin/activate testbed\nexport PYTHONPATH=/testbed\ncd /testbed\ntest \"$(git rev-parse HEAD)\" = 10a3b68a71d6cb16b170dec4efe2ec1ae197d65f\ngit apply --check /evidence/candidate.patch\ngit apply /evidence/candidate.patch\nif git cat-file -e 10a3b68a71d6cb16b170dec4efe2ec1ae197d65f:tests/models/test_queryparams.py 2>/dev/null; then git checkout 10a3b68a71d6cb16b170dec4efe2ec1ae197d65f -- tests/models/test_queryparams.py; else rm -f -- tests/models/test_queryparams.py; fi\ngit apply /evidence/test.patch\npython -c 'import httpx; assert httpx.__file__.startswith(\"/testbed/\"); print(\"IMPORT_FROM_TASK_VERIFIED\")'\npytest -xvs --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/models/test_queryparams.py --maxfail=0 --junitxml=/evidence/candidate.xml"
+  ],
+  "test_patch_sha256": "f851b6dc37330ed07ef6787ec9696fd1171940641f1270b178be4864cc056ca7"
+}

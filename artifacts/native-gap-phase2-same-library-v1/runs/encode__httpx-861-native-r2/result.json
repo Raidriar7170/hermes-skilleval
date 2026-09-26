@@ -1,0 +1,874 @@
+{
+  "t0": 936444.702779666,
+  "t1": 936514.545703791,
+  "elapsed_seconds": 69.8429241249105,
+  "budget_valid": true,
+  "model_started": true,
+  "model_start_requested": true,
+  "tool_action_observed": true,
+  "parent_status": "WORKER_EXIT",
+  "parent_cleanup": {
+    "no_running_tool_confirmation": true,
+    "candidate_captured": true,
+    "candidate_identity": {
+      "bytes": 2159,
+      "sha256": "c1222c3d3782c2b3fd3f908a8e252cce5911d07c70b71c1249ba4d932d2a24b5"
+    }
+  },
+  "parent_cleanup_error": null,
+  "id": "encode__httpx-861-native-r2",
+  "terminal": "completed",
+  "usage": {
+    "totalTokens": 169791,
+    "inputTokens": 167461,
+    "cachedInputTokens": 138880,
+    "cacheWriteInputTokens": 0,
+    "outputTokens": 2330,
+    "reasoningOutputTokens": 764
+  },
+  "observations": {
+    "catalog_read_observed": false,
+    "explicit_body_read_observed": false,
+    "references_read_observed": false,
+    "automatic_body_context": "UNKNOWN_INITIAL_CONTEXT_NOT_EXPOSED",
+    "body_non_read_is_not_unused_proof": true
+  },
+  "input_bindings_verified": true,
+  "discovery_identity_verified": true,
+  "original_project_skills": [],
+  "navigation": null,
+  "navigation_seconds": 0,
+  "navigation_fallback": false,
+  "navigation_error": null,
+  "prompt": "Repository: encode/httpx\nLanguage: Python\n\nRedundant `boundary` if files/data is empty\nIf you try to send a post request with empty data and files — you will create a body with one `--boundary--` string, which can break the server.\r\n\r\nIt's because httpx create MultipartStream for `data={}, files={}`:\r\nhttps://github.com/encode/httpx/blob/a82adcc933345c6b8cb1623b031eb85723e7665b/httpx/_content_streams.py#L332-L334\r\n\r\nAnd this MultipartStream doesn't have special behavior for empty data/files:\r\nhttps://github.com/encode/httpx/blob/a82adcc933345c6b8cb1623b031eb85723e7665b/httpx/_content_streams.py#L277-L283\r\n\r\nReproducible example:\r\n\r\n```\r\nfrom httpx.content_streams import encode\r\n\r\nstream = encode(data={}, files={}, boundary=b\"+++\")\r\nprint(b\"\".join([part for part in stream]))\r\n# b'--+++--\\r\\n'\r\n```\r\n\r\nI see two ways to solve it:\r\n1. Check files not only for None but also for emptiness in `_content_streams.decode`\r\n2. Check the count of fields in `MultipartStream.__init__` and doesn't write anything if fields are empty.\r\n\r\nI already opened PR (#861) with a test example. If someone tells me which of these options is better, I will be happy to implement it  🙌\n\nThe repository is /testbed at the repair-before base. Python and dependencies are installed in /opt/conda/envs/testbed; use its python/pytest. Scratch is /workspace/scratch. Historical skills may be useful references but are not mandatory; current requirements and actual source take priority. Make the requested repair and run relevant available tests. Network access is unavailable in this preconfigured repository maintenance environment.\nThe full experience catalog is /home/native/.agents/skills/catalog.md. All entries and references are optional and available.",
+  "thread_id": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+  "public_events": [
+    {
+      "method": "configWarning",
+      "params": {
+        "summary": "Codex could not find bubblewrap on PATH. Install bubblewrap with your OS package manager. See the sandbox prerequisites: https://developers.openai.com/codex/concepts/sandboxing#prerequisites. Codex will use the bundled bubblewrap in the meantime.",
+        "details": null
+      },
+      "emittedAtMs": 1790399457029
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "userMessage",
+          "id": "01a0dc1f-b3bc-7f63-9085-a46f123e2a41",
+          "clientId": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "Repository: encode/httpx\nLanguage: Python\n\nRedundant `boundary` if files/data is empty\nIf you try to send a post request with empty data and files — you will create a body with one `--boundary--` string, which can break the server.\r\n\r\nIt's because httpx create MultipartStream for `data={}, files={}`:\r\nhttps://github.com/encode/httpx/blob/a82adcc933345c6b8cb1623b031eb85723e7665b/httpx/_content_streams.py#L332-L334\r\n\r\nAnd this MultipartStream doesn't have special behavior for empty data/files:\r\nhttps://github.com/encode/httpx/blob/a82adcc933345c6b8cb1623b031eb85723e7665b/httpx/_content_streams.py#L277-L283\r\n\r\nReproducible example:\r\n\r\n```\r\nfrom httpx.content_streams import encode\r\n\r\nstream = encode(data={}, files={}, boundary=b\"+++\")\r\nprint(b\"\".join([part for part in stream]))\r\n# b'--+++--\\r\\n'\r\n```\r\n\r\nI see two ways to solve it:\r\n1. Check files not only for None but also for emptiness in `_content_streams.decode`\r\n2. Check the count of fields in `MultipartStream.__init__` and doesn't write anything if fields are empty.\r\n\r\nI already opened PR (#861) with a test example. If someone tells me which of these options is better, I will be happy to implement it  🙌\n\nThe repository is /testbed at the repair-before base. Python and dependencies are installed in /opt/conda/envs/testbed; use its python/pytest. Scratch is /workspace/scratch. Historical skills may be useful references but are not mandatory; current requirements and actual source take priority. Make the requested repair and run relevant available tests. Network access is unavailable in this preconfigured repository maintenance environment.\nThe full experience catalog is /home/native/.agents/skills/catalog.md. All entries and references are optional and available.",
+              "text_elements": []
+            }
+          ]
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399460284
+      },
+      "emittedAtMs": 1790399460290
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "msg_009bf59781436efd016ab753e8520c87d0850553ddc023c695",
+          "text": "I’ll check how `encode` chooses the request body and how the streams serialize empty fields, then make the smallest fix and run the relevant tests.",
+          "phase": "commentary",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399465402
+      },
+      "emittedAtMs": 1790399465411
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-29c1e774-e87d-41c8-9e44-73139ed6a903",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"pwd && rg --files -g 'AGENTS.md' -g '*content*stream*' -g '*multipart*' -g 'test*' | head -80\"",
+          "cwd": "/testbed",
+          "processId": "58548",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "pwd && rg --files -g 'AGENTS.md' -g '*content*stream*' -g '*multipart*' -g 'test*' | head -80"
+            }
+          ],
+          "aggregatedOutput": "/testbed\n/usr/bin/bash: line 1: /native/codex-path/rg: cannot execute: required file not found\n",
+          "exitCode": 0,
+          "durationMs": 0
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399467428
+      },
+      "emittedAtMs": 1790399467440
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-20891099-3b02-4bec-b3eb-8e98e784cada",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"git status --short && rg -n 'class MultipartStream|def encode\\\\(|files is not None|boundary' httpx tests | head -160\"",
+          "cwd": "/testbed",
+          "processId": "89706",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "git status --short && rg -n 'class MultipartStream|def encode\\(|files is not None|boundary' httpx tests | head -160"
+            }
+          ],
+          "aggregatedOutput": "/usr/bin/bash: line 1: /native/codex-path/rg: cannot execute: required file not found\n",
+          "exitCode": 0,
+          "durationMs": 76
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399467503
+      },
+      "emittedAtMs": 1790399467505
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 12780,
+            "inputTokens": 12582,
+            "cachedInputTokens": 0,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 198,
+            "reasoningOutputTokens": 12
+          },
+          "last": {
+            "totalTokens": 12780,
+            "inputTokens": 12582,
+            "cachedInputTokens": 0,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 198,
+            "reasoningOutputTokens": 12
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399467516
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-6d2ef796-297f-42a3-a98b-1e18c42f00e7",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"find . -name AGENTS.md -o -iname '*content*stream*' -o -iname '*multipart*' | head -80\"",
+          "cwd": "/testbed",
+          "processId": "44061",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "search",
+              "command": "find . -name AGENTS.md -o -iname '*content*stream*' -o -iname '*multipart*'",
+              "query": "AGENTS.md",
+              "path": "."
+            }
+          ],
+          "aggregatedOutput": "./tests/test_content_streams.py\n./tests/test_multipart.py\n./httpx/_content_streams.py\n",
+          "exitCode": 0,
+          "durationMs": 185
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399473375
+      },
+      "emittedAtMs": 1790399473384
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-e0082f6b-1b63-4b40-951a-538b068a93c1",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"grep -R -n -E 'class MultipartStream|def encode\\\\(' httpx tests 2>/dev/null | head -100\"",
+          "cwd": "/testbed",
+          "processId": "43839",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "grep -R -n -E 'class MultipartStream|def encode\\(' httpx tests 2>/dev/null | head -100"
+            }
+          ],
+          "aggregatedOutput": "httpx/_content_streams.py:192:class MultipartStream(ContentStream):\nhttpx/_content_streams.py:316:def encode(\n",
+          "exitCode": 0,
+          "durationMs": 143
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399473395
+      },
+      "emittedAtMs": 1790399473398
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-19930cde-2471-4841-951c-34d687426359",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'git status --short && ls -la && find . -maxdepth 2 -type f | head -80'",
+          "cwd": "/testbed",
+          "processId": "9252",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "git status --short && ls -la && find . -maxdepth 2 -type f | head -80"
+            }
+          ],
+          "aggregatedOutput": "total 64\ndrwxr-xr-x 21 501 dialout   672 Sep 26 05:11 .\ndrwxr-xr-x 15 501 dialout   300 Sep 26 05:11 ..\ndr-xr-xr-x  2 501 dialout    40 Sep 26 05:11 .agents\ndr-xr-xr-x  2 501 dialout    40 Sep 26 05:11 .codex\ndrwxr-xr-x 12 501 dialout   384 Sep 26 05:10 .git\n-rw-rw-r--  1 501 dialout   120 Mar 15  2020 .gitignore\n-rw-rw-r--  1 501 dialout   894 Mar 15  2020 .travis.yml\n-rw-rw-r--  1 501 dialout 14609 Mar 15  2020 CHANGELOG.md\n-rw-rw-r--  1 501 dialout   253 Mar 15  2020 CONTRIBUTING.md\n-rw-rw-r--  1 501 dialout  1518 Mar 15  2020 LICENSE.md\n-rw-rw-r--  1 501 dialout    81 Mar 15  2020 MANIFEST.in\n-rw-rw-r--  1 501 dialout  4741 Mar 15  2020 README.md\n-rw-rw-r--  1 501 dialout   156 Mar 15  2020 codecov.yml\ndrwxrwxr-x 15 501 dialout   480 Mar 15  2020 docs\ndrwxrwxr-x 17 501 dialout   544 Mar 15  2020 httpx\n-rw-rw-r--  1 501 dialout   739 Mar 15  2020 mkdocs.yml\n-rw-rw-r--  1 501 dialout   398 Mar 15  2020 requirements.txt\ndrwxrwxr-x 10 501 dialout   320 Mar 15  2020 scripts\n-rw-rw-r--  1 501 dialout   666 Mar 15  2020 setup.cfg\n-rw-rw-r--  1 501 dialout  2329 Mar 15  2020 setup.py\ndrwxrwxr-x 21 501 dialout   672 Mar 15  2020 tests\n./LICENSE.md\n./codecov.yml\n./mkdocs.yml\n./requirements.txt\n./CHANGELOG.md\n./tests/test_utils.py\n./tests/test_concurrency.py\n./tests/conftest.py\n./tests/.netrc\n./tests/test_timeouts.py\n./tests/test_content_streams.py\n./tests/concurrency.py\n./tests/test_asgi.py\n./tests/__init__.py\n./tests/test_decoders.py\n./tests/utils.py\n./tests/test_config.py\n./tests/test_status_codes.py\n./tests/test_multipart.py\n./tests/test_wsgi.py\n./tests/test_api.py\n./MANIFEST.in\n./docs/api.md\n./docs/CNAME\n./docs/quickstart.md\n./docs/async.md\n./docs/index.md\n./docs/advanced.md\n./docs/contributing.md\n./docs/compatibility.md\n./docs/http2.md\n./docs/environment_variables.md\n./README.md\n./httpx/_decoders.py\n./httpx/_api.py\n./httpx/__init__.py\n./httpx/__version__.py\n./httpx/_client.py\n./httpx/py.typed\n./httpx/_models.py\n./httpx/_config.py\n./httpx/_status_codes.py\n./httpx/_exceptions.py\n./httpx/_auth.py\n./httpx/_content_streams.py\n./httpx/_utils.py\n./setup.py\n./.gitignore\n./CONTRIBUTING.md\n./scripts/docs-serve\n./scripts/docs-build\n./scripts/lint\n./scripts/install\n./scripts/test\n./scripts/clean\n./scripts/publish\n./scripts/check\n./setup.cfg\n./.git/config\n./.git/shallow\n./.git/HEAD\n./.git/description\n./.git/index\n./.travis.yml\n",
+          "exitCode": 0,
+          "durationMs": 256
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399473475
+      },
+      "emittedAtMs": 1790399473478
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 25922,
+            "inputTokens": 25525,
+            "cachedInputTokens": 12416,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 397,
+            "reasoningOutputTokens": 27
+          },
+          "last": {
+            "totalTokens": 13142,
+            "inputTokens": 12943,
+            "cachedInputTokens": 12416,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 199,
+            "reasoningOutputTokens": 15
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399473487
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-7e5d513d-a4b0-45db-803f-a5834841a26d",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"sed -n '1,390p' httpx/_content_streams.py\"",
+          "cwd": "/testbed",
+          "processId": "15671",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "read",
+              "command": "sed -n '1,390p' httpx/_content_streams.py",
+              "name": "_content_streams.py",
+              "path": "/testbed/httpx/_content_streams.py"
+            }
+          ],
+          "aggregatedOutput": "import binascii\nimport mimetypes\nimport os\nimport typing\nfrom io import BytesIO\nfrom json import dumps as json_dumps\nfrom pathlib import Path\nfrom urllib.parse import urlencode\n\nfrom ._exceptions import StreamConsumed\nfrom ._utils import format_form_param\n\nRequestData = typing.Union[\n    dict, str, bytes, typing.Iterator[bytes], typing.AsyncIterator[bytes]\n]\n\nRequestFiles = typing.Dict[\n    str,\n    typing.Union[\n        # file (or str)\n        typing.Union[typing.IO[typing.AnyStr], typing.AnyStr],\n        # (filename, file (or str))\n        typing.Tuple[\n            typing.Optional[str], typing.Union[typing.IO[typing.AnyStr], typing.AnyStr],\n        ],\n        # (filename, file (or str), content_type)\n        typing.Tuple[\n            typing.Optional[str],\n            typing.Union[typing.IO[typing.AnyStr], typing.AnyStr],\n            typing.Optional[str],\n        ],\n    ],\n]\n\n\nclass ContentStream:\n    def get_headers(self) -> typing.Dict[str, str]:\n        \"\"\"\n        Return a dictionary of headers that are implied by the encoding.\n        \"\"\"\n        return {}\n\n    def can_replay(self) -> bool:\n        \"\"\"\n        Return `True` if `__aiter__` can be called multiple times.\n\n        We need this in cases such determining if we can re-issue a request\n        body when we receive a redirect response.\n        \"\"\"\n        return True\n\n    def __iter__(self) -> typing.Iterator[bytes]:\n        yield b\"\"\n\n    def close(self) -> None:\n        pass\n\n    async def __aiter__(self) -> typing.AsyncIterator[bytes]:\n        yield b\"\"\n\n    async def aclose(self) -> None:\n        pass\n\n\nclass ByteStream(ContentStream):\n    \"\"\"\n    Request content encoded as plain bytes.\n    \"\"\"\n\n    def __init__(self, body: typing.Union[str, bytes]) -> None:\n        self.body = body.encode(\"utf-8\") if i\n[public excerpt truncated]\nboundary)\n        else:\n            return ByteStream(body=b\"\")\n    elif isinstance(data, dict):\n        if files is not None:\n            return MultipartStream(data=data, files=files, boundary=boundary)\n        else:\n            return URLEncodedStream(data=data)\n    elif isinstance(data, (str, bytes)):\n        return ByteStream(body=data)\n    elif hasattr(data, \"__aiter__\"):\n        data = typing.cast(typing.AsyncIterator[bytes], data)\n        return AsyncIteratorStream(aiterator=data)\n    elif hasattr(data, \"__iter__\"):\n        data = typing.cast(typing.Iterator[bytes], data)\n        return IteratorStream(iterator=data)\n\n    raise TypeError(f\"Unexpected type for 'data', {type(data)!r}\")\n",
+          "exitCode": 0,
+          "durationMs": 182,
+          "aggregatedOutput_sha256": "1faf1db592d3c3bc711fdb45dec16bce8146fe6c9460e5ae92d211b7bf74fde2",
+          "aggregatedOutput_original_characters": 10953
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399478659
+      },
+      "emittedAtMs": 1790399478669
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-3d2636f3-4021-41bc-9bb5-ccaf034c5e77",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'cat tests/test_content_streams.py && cat tests/test_multipart.py'",
+          "cwd": "/testbed",
+          "processId": "68226",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "read",
+              "command": "cat tests/test_content_streams.py",
+              "name": "test_content_streams.py",
+              "path": "/testbed/tests/test_content_streams.py"
+            },
+            {
+              "type": "read",
+              "command": "cat tests/test_multipart.py",
+              "name": "test_multipart.py",
+              "path": "/testbed/tests/test_multipart.py"
+            }
+          ],
+          "aggregatedOutput": "import io\n\nimport pytest\n\nfrom httpx import StreamConsumed\nfrom httpx._content_streams import ContentStream, encode\n\n\n@pytest.mark.asyncio\nasync def test_base_content():\n    stream = ContentStream()\n    sync_content = b\"\".join([part for part in stream])\n    async_content = b\"\".join([part async for part in stream])\n\n    assert stream.can_replay()\n    assert stream.get_headers() == {}\n    assert sync_content == b\"\"\n    assert async_content == b\"\"\n\n\n@pytest.mark.asyncio\nasync def test_empty_content():\n    stream = encode()\n    sync_content = b\"\".join([part for part in stream])\n    async_content = b\"\".join([part async for part in stream])\n\n    assert stream.can_replay()\n    assert stream.get_headers() == {}\n    assert sync_content == b\"\"\n    assert async_content == b\"\"\n\n\n@pytest.mark.asyncio\nasync def test_bytes_content():\n    stream = encode(data=b\"Hello, world!\")\n    sync_content = b\"\".join([part for part in stream])\n    async_content = b\"\".join([part async for part in stream])\n\n    assert stream.can_replay()\n    assert stream.get_headers() == {\"Content-Length\": \"13\"}\n    assert sync_content == b\"Hello, world!\"\n    assert async_content == b\"Hello, world!\"\n\n\n@pytest.mark.asyncio\nasync def test_iterator_content():\n    def hello_world():\n        yield b\"Hello, \"\n        yield b\"world!\"\n\n    stream = encode(data=hello_world())\n    content = b\"\".join([part for part in stream])\n\n    assert not stream.can_replay()\n    assert stream.get_headers() == {\"Transfer-Encoding\": \"chunked\"}\n    assert content == b\"Hello, world!\"\n\n    with pytest.raises(RuntimeError):\n        [part async for part in stream]\n\n    with pytest.raises(StreamConsumed):\n        [part for part in stream]\n\n\n@pytest.mark.asyncio\nasync def test_aiterator_content():\n    async def hello_world():\n        yield b\"Hello,\n[public excerpt truncated]\n-\\r\\n\"\n            \"\".format(boundary).encode(\"ascii\")\n        )\n\n\nclass TestHeaderParamHTML5Formatting:\n    def test_unicode(self):\n        param = format_form_param(\"filename\", \"n\\u00e4me\")\n        assert param == b'filename=\"n\\xc3\\xa4me\"'\n\n    def test_ascii(self):\n        param = format_form_param(\"filename\", b\"name\")\n        assert param == b'filename=\"name\"'\n\n    def test_unicode_escape(self):\n        param = format_form_param(\"filename\", \"hello\\\\world\\u0022\")\n        assert param == b'filename=\"hello\\\\\\\\world%22\"'\n\n    def test_unicode_with_control_character(self):\n        param = format_form_param(\"filename\", \"hello\\x1A\\x1B\\x1C\")\n        assert param == b'filename=\"hello%1A\\x1B%1C\"'\n",
+          "exitCode": 0,
+          "durationMs": 199,
+          "aggregatedOutput_sha256": "c6ce9c0d0b74986d1d28717c2f2fb174499f353b9e92a62a91e1e9e4a92b01f6",
+          "aggregatedOutput_original_characters": 13639
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399478675
+      },
+      "emittedAtMs": 1790399478679
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-33dcc003-e3ed-4f17-97af-29e54f1191ca",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'cat .agents/* .codex/* 2>/dev/null'",
+          "cwd": "/testbed",
+          "processId": "79565",
+          "source": "unifiedExecStartup",
+          "status": "failed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "cat .agents/* .codex/* 2>/dev/null"
+            }
+          ],
+          "aggregatedOutput": null,
+          "exitCode": 1,
+          "durationMs": 164
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399478713
+      },
+      "emittedAtMs": 1790399478716
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-c724c699-0164-4c7d-8975-446318687849",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"grep -R -n -E 'files=\\\\{\\\\}|data=\\\\{\\\\}|MultipartStream|content-type.*multipart|Content-Length' tests httpx | head -160\"",
+          "cwd": "/testbed",
+          "processId": "39447",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "search",
+              "command": "grep -R -n -E \"files=\\\\{\\\\}|data=\\\\{\\\\}|MultipartStream|content-type.*multipart|Content-Length\" tests httpx",
+              "query": "files=\\{\\}|data=\\{\\}|MultipartStream|content-type.*multipart|Content-Length",
+              "path": "tests"
+            }
+          ],
+          "aggregatedOutput": "tests/dispatch/test_proxy_http.py:99:                b\"Content-Length: 0\\r\\n\"\ntests/dispatch/test_proxy_http.py:106:                b\"Content-Length: 0\\r\\n\"\ntests/dispatch/test_http2.py:22:    headers = {\"Content-Length\": str(len(content))}\ntests/test_content_streams.py:40:    assert stream.get_headers() == {\"Content-Length\": \"13\"}\ntests/test_content_streams.py:93:        \"Content-Length\": \"19\",\ntests/test_content_streams.py:108:        \"Content-Length\": \"14\",\ntests/test_content_streams.py:124:        \"Content-Length\": \"138\",\ntests/test_content_streams.py:159:        \"Content-Length\": \"210\",\ntests/models/test_requests.py:13:    assert \"Content-Length\" not in request.headers\ntests/models/test_requests.py:18:    assert request.headers[\"Content-Length\"] == \"8\"\ntests/models/test_requests.py:72:    assert \"Content-Length\" not in request.headers\ntests/models/test_requests.py:95:    headers = {\"Content-Length\": \"8\"}\ntests/models/test_requests.py:98:    assert request.headers[\"Content-Length\"] == \"8\"\ntests/test_multipart.py:42:    content_length = response.request.headers[\"Content-Length\"]\ntests/test_multipart.py:87:    content_length = response.request.headers[\"Content-Length\"]\ntests/test_multipart.py:130:        stream = encode(data={}, files=files)\ntests/test_multipart.py:155:        stream = encode(data={}, files=files)\ntests/test_multipart.py:171:        stream = encode(data={}, files=files)\ntests/test_wsgi.py:14:        (\"Content-Length\", str(len(output))),\ntests/test_wsgi.py:28:        (\"Content-Length\", str(len(output))),\ntests/test_wsgi.py:59:        (\"Content-Length\", str(len(output))),\nhttpx/_dispatch/urllib3.py:94:        content_length = int(request.headers.get(\"Content-Length\", \"0\"))\nhttpx/_dispatch/http2.py:205:            \"Content-Length\" in request.headers\nhttp\n[public excerpt truncated]\n\", None)\nhttpx/_content_streams.py:77:        return {\"Content-Length\": content_length}\nhttpx/_content_streams.py:163:        return {\"Content-Length\": content_length, \"Content-Type\": content_type}\nhttpx/_content_streams.py:183:        return {\"Content-Length\": content_length, \"Content-Type\": content_type}\nhttpx/_content_streams.py:192:class MultipartStream(ContentStream):\nhttpx/_content_streams.py:307:        return {\"Content-Length\": content_length, \"Content-Type\": content_type}\nhttpx/_content_streams.py:330:            return MultipartStream(data={}, files=files, boundary=boundary)\nhttpx/_content_streams.py:335:            return MultipartStream(data=data, files=files, boundary=boundary)\n",
+          "exitCode": 0,
+          "durationMs": 223,
+          "aggregatedOutput_sha256": "770d2db80b2891106aef5027b8840a21cded6ef3000df684449d9a6e9574d6ec",
+          "aggregatedOutput_original_characters": 2556
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399478722
+      },
+      "emittedAtMs": 1790399478724
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 40421,
+            "inputTokens": 39809,
+            "cachedInputTokens": 25216,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 612,
+            "reasoningOutputTokens": 35
+          },
+          "last": {
+            "totalTokens": 14499,
+            "inputTokens": 14284,
+            "cachedInputTokens": 12800,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 215,
+            "reasoningOutputTokens": 8
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399478754
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "msg_009bf59781436efd016ab753ffdd9487d0bde870b366c74969",
+          "text": "The extra boundary comes from one branch in `encode`: an empty `files` dict still selects multipart when `data` is a dict. I’ll treat empty `files` as absent there, so populated `data` uses form encoding and empty `data` produces an empty body.",
+          "phase": "commentary",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399489114
+      },
+      "emittedAtMs": 1790399489120
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-0df883f2-a446-44f2-933f-23f0fe0c15a4",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"sed -n '1,125p' tests/models/test_requests.py && sed -n '1,125p' httpx/_models.py\"",
+          "cwd": "/testbed",
+          "processId": "8442",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "read",
+              "command": "sed -n '1,125p' tests/models/test_requests.py",
+              "name": "test_requests.py",
+              "path": "/testbed/tests/models/test_requests.py"
+            },
+            {
+              "type": "read",
+              "command": "sed -n '1,125p' httpx/_models.py",
+              "name": "_models.py",
+              "path": "/testbed/httpx/_models.py"
+            }
+          ],
+          "aggregatedOutput": "import pytest\n\nimport httpx\n\n\ndef test_request_repr():\n    request = httpx.Request(\"GET\", \"http://example.org\")\n    assert repr(request) == \"<Request('GET', 'http://example.org')>\"\n\n\ndef test_no_content():\n    request = httpx.Request(\"GET\", \"http://example.org\")\n    assert \"Content-Length\" not in request.headers\n\n\ndef test_content_length_header():\n    request = httpx.Request(\"POST\", \"http://example.org\", data=b\"test 123\")\n    assert request.headers[\"Content-Length\"] == \"8\"\n\n\ndef test_url_encoded_data():\n    request = httpx.Request(\"POST\", \"http://example.org\", data={\"test\": \"123\"})\n    request.read()\n\n    assert request.headers[\"Content-Type\"] == \"application/x-www-form-urlencoded\"\n    assert request.content == b\"test=123\"\n\n\ndef test_json_encoded_data():\n    request = httpx.Request(\"POST\", \"http://example.org\", json={\"test\": 123})\n    request.read()\n\n    assert request.headers[\"Content-Type\"] == \"application/json\"\n    assert request.content == b'{\"test\": 123}'\n\n\ndef test_read_and_stream_data():\n    # Ensure a request may still be streamed if it has been read.\n    # Needed for cases such as authentication classes that read the request body.\n    request = httpx.Request(\"POST\", \"http://example.org\", json={\"test\": 123})\n    request.read()\n    content = b\"\".join([part for part in request.stream])\n    assert content == request.content\n\n\n@pytest.mark.asyncio\nasync def test_aread_and_stream_data():\n    # Ensure a request may still be streamed if it has been read.\n    # Needed for cases such as authentication classes that read the request body.\n    request = httpx.Request(\"POST\", \"http://example.org\", json={\"test\": 123})\n    await request.aread()\n    content = b\"\".join([part async for part in request.stream])\n    assert content == request.content\n\n\n@pytest.mark.asyncio\nasync def\n[public excerpt truncated]\n)\n            if not self.host:\n                raise InvalidURL(\"No host included in URL.\")\n\n        # Allow setting full_path to custom attributes requests\n        # like OPTIONS, CONNECT, and forwarding proxy requests.\n        self._full_path: typing.Optional[str] = None\n\n    @property\n    def scheme(self) -> str:\n        return self._uri_reference.scheme or \"\"\n\n    @property\n    def authority(self) -> str:\n        port_str = self._uri_reference.port\n        default_port_str = {\"https\": \"443\", \"http\": \"80\"}.get(self.scheme, \"\")\n        if port_str is None or port_str == default_port_str:\n            return self._uri_reference.host or \"\"\n        return self._uri_reference.authority or \"\"\n\n",
+          "exitCode": 0,
+          "durationMs": 31,
+          "aggregatedOutput_sha256": "8ae8d6ad4fac268a9e072ae4618416bb9e2ea045f627107c9633cf24fe6675a5",
+          "aggregatedOutput_original_characters": 7339
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399491580
+      },
+      "emittedAtMs": 1790399491587
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-77db72dc-5eff-4f38-8526-010c2090615c",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'cat setup.cfg && cat scripts/test && /opt/conda/envs/testbed/bin/python --version'",
+          "cwd": "/testbed",
+          "processId": "14437",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "cat setup.cfg && cat scripts/test && /opt/conda/envs/testbed/bin/python --version"
+            }
+          ],
+          "aggregatedOutput": "[flake8]\nignore = W503, E203, B305\nmax-line-length = 88\n\n[mypy]\ndisallow_untyped_defs = True\nignore_missing_imports = True\n\n[tool:isort]\ncombine_as_imports = True\nforce_grid_wrap = 0\ninclude_trailing_comma = True\nknown_first_party = httpx,tests\nknown_third_party = brotli,certifi,chardet,cryptography,h11,h2,hstspreload,pytest,rfc3986,setuptools,sniffio,trio,trustme,urllib3,uvicorn\nline_length = 88\nmulti_line_output = 3\n\n[tool:pytest]\naddopts = --cov=httpx --cov=tests --cov-report=term-missing -rxXs\nmarkers =\n  copied_from(source, changes=None): mark test as copied from somewhere else, along with a description of changes made to accodomate e.g. our test setup\n#!/bin/sh -e\n\nexport PREFIX=\"\"\nif [ -d 'venv' ] ; then\n    export PREFIX=\"venv/bin/\"\nfi\n\nset -x\n\nif [ -z $CI ]; then\n    scripts/check\nfi\n\n${PREFIX}pytest $@\nPython 3.9.21\n",
+          "exitCode": 0,
+          "durationMs": 50
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399491598
+      },
+      "emittedAtMs": 1790399491600
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 63438,
+            "inputTokens": 62246,
+            "cachedInputTokens": 39296,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 1192,
+            "reasoningOutputTokens": 419
+          },
+          "last": {
+            "totalTokens": 23017,
+            "inputTokens": 22437,
+            "cachedInputTokens": 14080,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 580,
+            "reasoningOutputTokens": 384
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399491609
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "fileChange",
+          "id": "exec-70b60ed6-b9dc-4f3f-b47d-34bb92514876",
+          "changes": [
+            {
+              "path": "/testbed/httpx/_content_streams.py",
+              "kind": {
+                "type": "update",
+                "move_path": null
+              },
+              "diff": "@@ -333,3 +333,3 @@\n     elif isinstance(data, dict):\n-        if files is not None:\n+        if files:\n             return MultipartStream(data=data, files=files, boundary=boundary)\n"
+            },
+            {
+              "path": "/testbed/tests/models/test_requests.py",
+              "kind": {
+                "type": "update",
+                "move_path": null
+              },
+              "diff": "@@ -28,2 +28,11 @@\n \n+def test_empty_data_and_files():\n+    request = httpx.Request(\"POST\", \"http://example.org\", data={}, files={})\n+    request.read()\n+\n+    assert request.content == b\"\"\n+    assert request.headers[\"Content-Type\"] == \"application/x-www-form-urlencoded\"\n+    assert request.headers[\"Content-Length\"] == \"0\"\n+\n+\n def test_json_encoded_data():\n"
+            },
+            {
+              "path": "/testbed/tests/test_content_streams.py",
+              "kind": {
+                "type": "update",
+                "move_path": null
+              },
+              "diff": "@@ -114,2 +114,18 @@\n \n+@pytest.mark.parametrize(\n+    \"data, expected_content\",\n+    [({}, b\"\"), ({\"Hello\": \"world!\"}, b\"Hello=world%21\")],\n+)\n+@pytest.mark.asyncio\n+async def test_empty_files_use_urlencoded_content(data, expected_content):\n+    stream = encode(data=data, files={}, boundary=b\"+++\")\n+\n+    assert stream.get_headers() == {\n+        \"Content-Length\": str(len(expected_content)),\n+        \"Content-Type\": \"application/x-www-form-urlencoded\",\n+    }\n+    assert b\"\".join(stream) == expected_content\n+    assert b\"\".join([part async for part in stream]) == expected_content\n+\n+\n @pytest.mark.asyncio\n"
+            }
+          ],
+          "status": "completed"
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399504774
+      },
+      "emittedAtMs": 1790399504789
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 89479,
+            "inputTokens": 87632,
+            "cachedInputTokens": 61568,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 1847,
+            "reasoningOutputTokens": 604
+          },
+          "last": {
+            "totalTokens": 26041,
+            "inputTokens": 25386,
+            "cachedInputTokens": 22272,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 655,
+            "reasoningOutputTokens": 185
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399504800
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-08808173-900e-4d33-8534-160a103cbcb3",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"/opt/conda/envs/testbed/bin/python -m pytest -o addopts='' tests/test_content_streams.py tests/test_multipart.py tests/models/test_requests.py -q\"",
+          "cwd": "/testbed",
+          "processId": "27209",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python -m pytest -o addopts='' tests/test_content_streams.py tests/test_multipart.py tests/models/test_requests.py -q"
+            }
+          ],
+          "aggregatedOutput": "/opt/conda/envs/testbed/lib/python3.9/site-packages/pytest_asyncio/plugin.py:217: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n.................................................                        [100%]\n49 passed in 0.82s\n",
+          "exitCode": 0,
+          "durationMs": 7609
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399515141
+      },
+      "emittedAtMs": 1790399515153
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 115644,
+            "inputTokens": 113697,
+            "cachedInputTokens": 86784,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 1947,
+            "reasoningOutputTokens": 621
+          },
+          "last": {
+            "totalTokens": 26165,
+            "inputTokens": 26065,
+            "cachedInputTokens": 25216,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 100,
+            "reasoningOutputTokens": 17
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399515160
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "msg_009bf59781436efd016ab7541d925087d0a43258fbdeadca8b",
+          "text": "The regression tests pass for empty `data` and `files`, and for populated `data` with empty `files`. I’ll review the final diff and check that the tests still cover real multipart requests.",
+          "phase": "commentary",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399519014
+      },
+      "emittedAtMs": 1790399519020
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-8e372f36-e0f2-44ab-b628-54dc300c265d",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'git status --short'",
+          "cwd": "/testbed",
+          "processId": "66162",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "git status --short"
+            }
+          ],
+          "aggregatedOutput": " M httpx/_content_streams.py\n M tests/models/test_requests.py\n M tests/test_content_streams.py\n",
+          "exitCode": 0,
+          "durationMs": 82
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399520689
+      },
+      "emittedAtMs": 1790399520695
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-29049905-157c-4b70-80cf-42e2d5aee3cb",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'git diff --check && git diff -- httpx/_content_streams.py tests/test_content_streams.py tests/models/test_requests.py'",
+          "cwd": "/testbed",
+          "processId": "45962",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "git diff --check && git diff -- httpx/_content_streams.py tests/test_content_streams.py tests/models/test_requests.py"
+            }
+          ],
+          "aggregatedOutput": "diff --git a/httpx/_content_streams.py b/httpx/_content_streams.py\nindex 5f3237e..f12aad9 100644\n--- a/httpx/_content_streams.py\n+++ b/httpx/_content_streams.py\n@@ -331,7 +331,7 @@ def encode(\n         else:\n             return ByteStream(body=b\"\")\n     elif isinstance(data, dict):\n-        if files is not None:\n+        if files:\n             return MultipartStream(data=data, files=files, boundary=boundary)\n         else:\n             return URLEncodedStream(data=data)\ndiff --git a/tests/models/test_requests.py b/tests/models/test_requests.py\nindex c72e0af..234d619 100644\n--- a/tests/models/test_requests.py\n+++ b/tests/models/test_requests.py\n@@ -26,6 +26,15 @@ def test_url_encoded_data():\n     assert request.content == b\"test=123\"\n \n \n+def test_empty_data_and_files():\n+    request = httpx.Request(\"POST\", \"http://example.org\", data={}, files={})\n+    request.read()\n+\n+    assert request.content == b\"\"\n+    assert request.headers[\"Content-Type\"] == \"application/x-www-form-urlencoded\"\n+    assert request.headers[\"Content-Length\"] == \"0\"\n+\n+\n def test_json_encoded_data():\n     request = httpx.Request(\"POST\", \"http://example.org\", json={\"test\": 123})\n     request.read()\ndiff --git a/tests/test_content_streams.py b/tests/test_content_streams.py\nindex 6aa91f4..569ee30 100644\n--- a/tests/test_content_streams.py\n+++ b/tests/test_content_streams.py\n@@ -112,6 +112,22 @@ async def test_urlencoded_content():\n     assert async_content == b\"Hello=world%21\"\n \n \n+@pytest.mark.parametrize(\n+    \"data, expected_content\",\n+    [({}, b\"\"), ({\"Hello\": \"world!\"}, b\"Hello=world%21\")],\n+)\n+@pytest.mark.asyncio\n+async def test_empty_files_use_urlencoded_content(data, expected_content):\n+    stream = encode(data=data, files={}, boundary=b\"+++\")\n+\n+    assert stream.get_headers() == {\n+        \"Content-Length\": str(len(expected_content)),\n+        \"Content-Type\": \"application/x-www-form-urlencoded\",\n+    }\n+    assert b\"\".join(stream) == expected_content\n+    assert b\"\".join([part async for part in stream]) == expected_content\n+\n+\n @pytest.mark.asyncio\n async def test_multipart_files_content():\n     files = {\"file\": io.BytesIO(b\"<file content>\")}\n",
+          "exitCode": 0,
+          "durationMs": 161
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399520739
+      },
+      "emittedAtMs": 1790399520742
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 142257,
+            "inputTokens": 140077,
+            "cachedInputTokens": 112640,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 2180,
+            "reasoningOutputTokens": 694
+          },
+          "last": {
+            "totalTokens": 26613,
+            "inputTokens": 26380,
+            "cachedInputTokens": 25856,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 233,
+            "reasoningOutputTokens": 73
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399520750
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "msg_009bf59781436efd016ab754236c2087d0b55991ae16f793bd",
+          "text": "Fixed `encode` so empty `files={}` does not select multipart encoding. A POST with `data={}, files={}` now has an empty body instead of a boundary marker; populated `data` with empty `files` uses URL encoding.\n\nAdded stream and request regression tests. **49 relevant tests passed**, and `git diff --check` found no whitespace issues.",
+          "phase": "final_answer",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "completedAtMs": 1790399525682
+      },
+      "emittedAtMs": 1790399525691
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turnId": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 169791,
+            "inputTokens": 167461,
+            "cachedInputTokens": 138880,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 2330,
+            "reasoningOutputTokens": 764
+          },
+          "last": {
+            "totalTokens": 27534,
+            "inputTokens": 27384,
+            "cachedInputTokens": 26240,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 150,
+            "reasoningOutputTokens": 70
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399525709
+    },
+    {
+      "method": "turn/completed",
+      "params": {
+        "threadId": "01a0dc1f-aaf6-73e0-9828-2a7f66dbcc14",
+        "turn": {
+          "id": "01a0dc1f-ac43-7c30-8752-69868d8ed5ac",
+          "items": [
+            {
+              "type": "agentMessage",
+              "id": "msg_009bf59781436efd016ab754236c2087d0b55991ae16f793bd",
+              "text": "Fixed `encode` so empty `files={}` does not select multipart encoding. A POST with `data={}, files={}` now has an empty body instead of a boundary marker; populated `data` with empty `files` uses URL encoding.\n\nAdded stream and request regression tests. **49 relevant tests passed**, and `git diff --check` found no whitespace issues.",
+              "phase": "final_answer",
+              "memoryCitation": null,
+              "delivery": null,
+              "questions": null
+            }
+          ],
+          "itemsView": "summary",
+          "status": "completed",
+          "error": null,
+          "startedAt": 1790399458,
+          "completedAt": 1790399525,
+          "durationMs": 67337
+        }
+      },
+      "emittedAtMs": 1790399525721
+    }
+  ],
+  "money": null,
+  "memory_scope": "SKILLS_ONLY_NO_GENERATION_NO_USE",
+  "instance_id": "encode__httpx-861",
+  "arm": "NATIVE",
+  "repeat": 2,
+  "functional_result": "FAIL",
+  "protocol_validity": "VERIFIED"
+}

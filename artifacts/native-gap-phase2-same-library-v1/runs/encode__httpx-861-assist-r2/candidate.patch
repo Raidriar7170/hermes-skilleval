@@ -1,0 +1,42 @@
+diff --git a/httpx/_content_streams.py b/httpx/_content_streams.py
+index 5f3237e..f12aad9 100644
+--- a/httpx/_content_streams.py
++++ b/httpx/_content_streams.py
+@@ -331,7 +331,7 @@ def encode(
+         else:
+             return ByteStream(body=b"")
+     elif isinstance(data, dict):
+-        if files is not None:
++        if files:
+             return MultipartStream(data=data, files=files, boundary=boundary)
+         else:
+             return URLEncodedStream(data=data)
+diff --git a/tests/test_content_streams.py b/tests/test_content_streams.py
+index 6aa91f4..efc6b4c 100644
+--- a/tests/test_content_streams.py
++++ b/tests/test_content_streams.py
+@@ -112,6 +112,24 @@ async def test_urlencoded_content():
+     assert async_content == b"Hello=world%21"
+ 
+ 
++@pytest.mark.asyncio
++@pytest.mark.parametrize(
++    "data, expected_content",
++    [({}, b""), ({"Hello": "world!"}, b"Hello=world%21")],
++)
++async def test_empty_files_content(data, expected_content):
++    stream = encode(data=data, files={}, boundary=b"+++")
++    sync_content = b"".join(stream)
++    async_content = b"".join([part async for part in stream])
++
++    assert stream.get_headers() == {
++        "Content-Length": str(len(expected_content)),
++        "Content-Type": "application/x-www-form-urlencoded",
++    }
++    assert sync_content == expected_content
++    assert async_content == expected_content
++
++
+ @pytest.mark.asyncio
+ async def test_multipart_files_content():
+     files = {"file": io.BytesIO(b"<file content>")}

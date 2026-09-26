@@ -1,0 +1,45 @@
+diff --git a/pyupgrade.py b/pyupgrade.py
+index b67cbf7..693426b 100644
+--- a/pyupgrade.py
++++ b/pyupgrade.py
+@@ -548,6 +548,15 @@ def _fix_extraneous_parens(tokens, i):
+         return
+ 
+     start = i
++    # A yield expression needs its own parentheses when used as a call arg.
++    # Removing them would turn f((yield x)) into invalid f(yield x).
++    i += 1
++    while tokens[i].name in NON_CODING_TOKENS:
++        i += 1
++    if tokens[i].src == 'yield':
++        return
++
++    i = start
+     depth = 1
+     while depth:
+         i += 1
+diff --git a/tests/pyupgrade_test.py b/tests/pyupgrade_test.py
+index 9ab97d3..3b11a66 100644
+--- a/tests/pyupgrade_test.py
++++ b/tests/pyupgrade_test.py
+@@ -513,6 +513,9 @@ def test_fix_octal_literal(s, expected):
+         'print((\n))',
+         # don't touch parenthesized generators
+         'sum((block.code for block in blocks), [])',
++        'def f():\n    return int((yield control_ws.read_message()))\n',
++        'def f():\n    return int((yield from messages))\n',
++        'def f():\n    return int((  yield control_ws.read_message()))\n',
+     ),
+ )
+ def test_fix_extra_parens_noop(s):
+@@ -525,6 +528,10 @@ def test_fix_extra_parens_noop(s):
+         ('print(("hello world"))', 'print("hello world")'),
+         ('print(("foo{}".format(1)))', 'print("foo{}".format(1))'),
+         ('print((((1))))', 'print(1)'),
++        (
++            'def f():\n    return int(((yield control_ws.read_message())))\n',
++            'def f():\n    return int((yield control_ws.read_message()))\n',
++        ),
+         (
+             'print(\n'
+             '    ("foo{}".format(1))\n'

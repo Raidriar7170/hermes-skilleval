@@ -1,0 +1,71 @@
+diff --git a/httpx/_content_streams.py b/httpx/_content_streams.py
+index 5f3237e..f12aad9 100644
+--- a/httpx/_content_streams.py
++++ b/httpx/_content_streams.py
+@@ -331,7 +331,7 @@ def encode(
+         else:
+             return ByteStream(body=b"")
+     elif isinstance(data, dict):
+-        if files is not None:
++        if files:
+             return MultipartStream(data=data, files=files, boundary=boundary)
+         else:
+             return URLEncodedStream(data=data)
+diff --git a/tests/test_content_streams.py b/tests/test_content_streams.py
+index 6aa91f4..d58ca3a 100644
+--- a/tests/test_content_streams.py
++++ b/tests/test_content_streams.py
+@@ -112,6 +112,31 @@ async def test_urlencoded_content():
+     assert async_content == b"Hello=world%21"
+ 
+ 
++@pytest.mark.parametrize(
++    "data,expected_content",
++    [({}, b""), ({"Hello": "world!"}, b"Hello=world%21")],
++)
++@pytest.mark.asyncio
++async def test_empty_files_use_urlencoded_content(data, expected_content):
++    stream = encode(data=data, files={}, boundary=b"+++")
++
++    assert stream.get_headers() == {
++        "Content-Length": str(len(expected_content)),
++        "Content-Type": "application/x-www-form-urlencoded",
++    }
++    assert b"".join(stream) == expected_content
++    assert b"".join([part async for part in stream]) == expected_content
++
++
++@pytest.mark.asyncio
++async def test_empty_files_without_data_have_empty_content():
++    stream = encode(files={}, boundary=b"+++")
++
++    assert stream.get_headers() == {}
++    assert b"".join(stream) == b""
++    assert b"".join([part async for part in stream]) == b""
++
++
+ @pytest.mark.asyncio
+ async def test_multipart_files_content():
+     files = {"file": io.BytesIO(b"<file content>")}
+diff --git a/tests/test_multipart.py b/tests/test_multipart.py
+index 3df19fe..91ff894 100644
+--- a/tests/test_multipart.py
++++ b/tests/test_multipart.py
+@@ -25,6 +25,17 @@ class MockDispatch(AsyncDispatcher):
+         return httpx.Response(200, content=content, request=request)
+ 
+ 
++@pytest.mark.asyncio
++async def test_post_with_empty_data_and_files():
++    client = httpx.AsyncClient(dispatch=MockDispatch())
++
++    response = await client.post("http://127.0.0.1:8000/", data={}, files={})
++
++    assert response.content == b""
++    assert response.request.headers["Content-Length"] == "0"
++    assert response.request.headers["Content-Type"] == "application/x-www-form-urlencoded"
++
++
+ @pytest.mark.parametrize(("value,output"), (("abc", b"abc"), (b"abc", b"abc")))
+ @pytest.mark.asyncio
+ async def test_multipart(value, output):
