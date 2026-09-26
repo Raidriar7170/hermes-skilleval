@@ -1,0 +1,56 @@
+{
+  "id": "encode__httpx-861-assist-r2",
+  "instance_id": "encode__httpx-861",
+  "functional_result": "FAIL",
+  "candidate_sha256": "1dda78455ac57009da973f0ad1f251ad75cc1fb34416c460aa1bb274fe919752",
+  "candidate_bytes": 1501,
+  "returncode": 1,
+  "offline_seconds": 2.3182049590395764,
+  "author_label_checks": {
+    "FAIL_TO_PASS": {
+      "tests/test_content_streams.py::test_empty_request": "FAILED"
+    },
+    "PASS_TO_PASS": {
+      "tests/test_content_streams.py::test_base_content": "PASSED",
+      "tests/test_content_streams.py::test_empty_content": "PASSED",
+      "tests/test_content_streams.py::test_bytes_content": "PASSED",
+      "tests/test_content_streams.py::test_iterator_content": "PASSED",
+      "tests/test_content_streams.py::test_aiterator_content": "PASSED",
+      "tests/test_content_streams.py::test_json_content": "PASSED",
+      "tests/test_content_streams.py::test_urlencoded_content": "PASSED",
+      "tests/test_content_streams.py::test_multipart_files_content": "PASSED",
+      "tests/test_content_streams.py::test_multipart_data_and_files_content": "PASSED",
+      "tests/test_content_streams.py::test_invalid_argument": "PASSED"
+    }
+  },
+  "junit_counts": {
+    "tests": 11,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0
+  },
+  "import_verified": true,
+  "command": [
+    "docker",
+    "run",
+    "--rm",
+    "--name",
+    "hermes-phase2-check-encode__httpx-861-assist-r2",
+    "--platform",
+    "linux/amd64",
+    "--network",
+    "none",
+    "--memory",
+    "4g",
+    "--cpus",
+    "2",
+    "-v",
+    "$PRIVATE/checks/encode__httpx-861-assist-r2:/evidence",
+    "--entrypoint",
+    "/bin/bash",
+    "sha256:b8654dfe9ae5989cab30952323be045dca3f4aa5f064aea5f74da62b1b855892",
+    "-lc",
+    "set -e\nsource /opt/miniconda3/bin/activate testbed\nexport PYTHONPATH=/testbed\ncd /testbed\ntest \"$(git rev-parse HEAD)\" = 43ec09c3cbb089edd2e83ccc717fb95beef0c189\ngit apply --check /evidence/candidate.patch\ngit apply /evidence/candidate.patch\nif git cat-file -e 43ec09c3cbb089edd2e83ccc717fb95beef0c189:tests/test_content_streams.py 2>/dev/null; then git checkout 43ec09c3cbb089edd2e83ccc717fb95beef0c189 -- tests/test_content_streams.py; else rm -f -- tests/test_content_streams.py; fi\ngit apply /evidence/test.patch\npython -c 'import httpx; assert httpx.__file__.startswith(\"/testbed/\"); print(\"IMPORT_FROM_TASK_VERIFIED\")'\npytest --no-header -rA --tb=line --color=no -p no:cacheprovider -W ignore::DeprecationWarning tests/test_content_streams.py --maxfail=0 --junitxml=/evidence/candidate.xml"
+  ],
+  "test_patch_sha256": "b29d9b6cf1cfd6b6eedcf4cc57afd9b628d0c18bab57e3f3c094375bea714ad5"
+}

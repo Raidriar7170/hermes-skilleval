@@ -1,0 +1,2446 @@
+{
+  "t0": 936514.546947458,
+  "t1": 937010.9577885,
+  "elapsed_seconds": 496.4108410420595,
+  "budget_valid": true,
+  "model_started": true,
+  "model_start_requested": true,
+  "tool_action_observed": true,
+  "parent_status": "WORKER_EXIT",
+  "parent_cleanup": {
+    "no_running_tool_confirmation": true,
+    "candidate_captured": true,
+    "candidate_identity": {
+      "bytes": 8908,
+      "sha256": "9615f4cfe7ba3543a7235f085e3f33bb8490b6ecb3fd244091124490ba318926"
+    }
+  },
+  "parent_cleanup_error": null,
+  "id": "encode__httpx-2523-native-r2",
+  "terminal": "completed",
+  "usage": {
+    "totalTokens": 1330841,
+    "inputTokens": 1319494,
+    "cachedInputTokens": 1269760,
+    "cacheWriteInputTokens": 0,
+    "outputTokens": 11347,
+    "reasoningOutputTokens": 4598
+  },
+  "observations": {
+    "catalog_read_observed": false,
+    "explicit_body_read_observed": false,
+    "references_read_observed": false,
+    "automatic_body_context": "UNKNOWN_INITIAL_CONTEXT_NOT_EXPOSED",
+    "body_non_read_is_not_unused_proof": true
+  },
+  "input_bindings_verified": true,
+  "discovery_identity_verified": true,
+  "original_project_skills": [],
+  "navigation": null,
+  "navigation_seconds": 0,
+  "navigation_fallback": false,
+  "navigation_error": null,
+  "prompt": "Repository: encode/httpx\nLanguage: Python\n\nSupport passing bytes keys/values in `params=...`\n``` python\r\n>>> httpx.get('https://example.org', params={b'testparam': b'testvalue'}).url\r\nURL('https://example.org?b%27testparam%27=b%27testvalue%27')\r\n```\r\n\r\nI don't think this is intentional, as there is an isinstance check for bytes in the ``flatten_queryparams`` function, I'd expect anyone involved to have raised an exception instead of letting it go through like that, and that would be an undocumented divergence from requests compatibility.\r\n\r\nI have tested with ``httpx==0.7.8`` as well as ``httpx==0.11.0``.\n\nThe repository is /testbed at the repair-before base. Python and dependencies are installed in /opt/conda/envs/testbed; use its python/pytest. Scratch is /workspace/scratch. Historical skills may be useful references but are not mandatory; current requirements and actual source take priority. Make the requested repair and run relevant available tests. Network access is unavailable in this preconfigured repository maintenance environment.\nThe full experience catalog is /home/native/.agents/skills/catalog.md. All entries and references are optional and available.",
+  "thread_id": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+  "public_events": [
+    {
+      "method": "configWarning",
+      "params": {
+        "summary": "Codex could not find bubblewrap on PATH. Install bubblewrap with your OS package manager. See the sandbox prerequisites: https://developers.openai.com/codex/concepts/sandboxing#prerequisites. Codex will use the bundled bubblewrap in the meantime.",
+        "details": null
+      },
+      "emittedAtMs": 1790399526963
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "userMessage",
+          "id": "01a0dc20-c162-7832-a84d-841f5d27e6e1",
+          "clientId": null,
+          "content": [
+            {
+              "type": "text",
+              "text": "Repository: encode/httpx\nLanguage: Python\n\nSupport passing bytes keys/values in `params=...`\n``` python\r\n>>> httpx.get('https://example.org', params={b'testparam': b'testvalue'}).url\r\nURL('https://example.org?b%27testparam%27=b%27testvalue%27')\r\n```\r\n\r\nI don't think this is intentional, as there is an isinstance check for bytes in the ``flatten_queryparams`` function, I'd expect anyone involved to have raised an exception instead of letting it go through like that, and that would be an undocumented divergence from requests compatibility.\r\n\r\nI have tested with ``httpx==0.7.8`` as well as ``httpx==0.11.0``.\n\nThe repository is /testbed at the repair-before base. Python and dependencies are installed in /opt/conda/envs/testbed; use its python/pytest. Scratch is /workspace/scratch. Historical skills may be useful references but are not mandatory; current requirements and actual source take priority. Make the requested repair and run relevant available tests. Network access is unavailable in this preconfigured repository maintenance environment.\nThe full experience catalog is /home/native/.agents/skills/catalog.md. All entries and references are optional and available.",
+              "text_elements": []
+            }
+          ]
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399529314
+      },
+      "emittedAtMs": 1790399529318
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "msg_07d2747524ae21d2016ab7542aac2487d09b0eb6cef7d4982f",
+          "text": "I’ll trace how `params` values are flattened and encoded, then add coverage for bytes keys and values and run the relevant tests.",
+          "phase": "commentary",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399531334
+      },
+      "emittedAtMs": 1790399531338
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 12622,
+            "inputTokens": 12439,
+            "cachedInputTokens": 11392,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 183,
+            "reasoningOutputTokens": 11
+          },
+          "last": {
+            "totalTokens": 12622,
+            "inputTokens": 12439,
+            "cachedInputTokens": 11392,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 183,
+            "reasoningOutputTokens": 11
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399533810
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-35ebddb0-d594-4ac7-89ff-3aa850b5da9f",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"rg --files -g 'AGENTS.md' -g '*query*' -g '*url*' | head -n 100\"",
+          "cwd": "/testbed",
+          "processId": "84336",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "listFiles",
+              "command": "rg --files -g AGENTS.md -g '*query*' -g '*url*'",
+              "path": null
+            }
+          ],
+          "aggregatedOutput": null,
+          "exitCode": 0,
+          "durationMs": 21
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399538929
+      },
+      "emittedAtMs": 1790399538939
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-13a0ccdc-9b92-4acb-b7e4-1c0b3f86c557",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'pwd && git status --short && rg -n \"flatten_queryparams|QueryParams|params=\" httpx tests | head -n 160'",
+          "cwd": "/testbed",
+          "processId": "47009",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "pwd && git status --short && rg -n \"flatten_queryparams|QueryParams|params=\" httpx tests | head -n 160"
+            }
+          ],
+          "aggregatedOutput": "/usr/bin/bash: line 1: /native/codex-path/rg: cannot execute: required file not found\n",
+          "exitCode": 0,
+          "durationMs": 138
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399539045
+      },
+      "emittedAtMs": 1790399539047
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 25467,
+            "inputTokens": 25095,
+            "cachedInputTokens": 23680,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 372,
+            "reasoningOutputTokens": 61
+          },
+          "last": {
+            "totalTokens": 12845,
+            "inputTokens": 12656,
+            "cachedInputTokens": 12288,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 189,
+            "reasoningOutputTokens": 50
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399539057
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-ac223787-5321-4e43-a942-91559fdc4412",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'ls -la && find tests -maxdepth 2 -type f | head -n 80'",
+          "cwd": "/testbed",
+          "processId": "60543",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "listFiles",
+              "command": "ls -la",
+              "path": null
+            },
+            {
+              "type": "listFiles",
+              "command": "find tests -maxdepth 2 -type f",
+              "path": "tests"
+            }
+          ],
+          "aggregatedOutput": "total 88\ndrwxr-xr-x 19 501 dialout   608 Sep 26 05:12 .\ndrwxr-xr-x 15 501 dialout   300 Sep 26 05:12 ..\ndr-xr-xr-x  2 501 dialout    40 Sep 26 05:12 .agents\ndr-xr-xr-x  2 501 dialout    40 Sep 26 05:12 .codex\ndrwxr-xr-x 12 501 dialout   384 Sep 26 05:12 .git\ndrwxrwxr-x  8 501 dialout   256 Dec 29  2022 .github\n-rw-rw-r--  1 501 dialout   120 Dec 29  2022 .gitignore\n-rw-rw-r--  1 501 dialout 46117 Dec 29  2022 CHANGELOG.md\n-rw-rw-r--  1 501 dialout  1508 Dec 29  2022 LICENSE.md\n-rw-rw-r--  1 501 dialout  4901 Dec 29  2022 README.md\n-rw-rw-r--  1 501 dialout  4626 Dec 29  2022 README_chinese.md\ndrwxrwxr-x 19 501 dialout   608 Dec 29  2022 docs\ndrwxrwxr-x 21 501 dialout   672 Dec 29  2022 httpx\n-rw-rw-r--  1 501 dialout  1471 Dec 29  2022 mkdocs.yml\n-rw-rw-r--  1 501 dialout  2030 Dec 29  2022 pyproject.toml\n-rw-rw-r--  1 501 dialout   919 Dec 29  2022 requirements.txt\ndrwxrwxr-x 12 501 dialout   384 Dec 29  2022 scripts\n-rw-rw-r--  1 501 dialout   683 Dec 29  2022 setup.cfg\ndrwxrwxr-x 24 501 dialout   768 Dec 29  2022 tests\ntests/test_utils.py\ntests/conftest.py\ntests/test_auth.py\ntests/test_timeouts.py\ntests/test_exported_members.py\ntests/concurrency.py\ntests/test_asgi.py\ntests/test_exceptions.py\ntests/__init__.py\ntests/models/test_cookies.py\ntests/models/test_queryparams.py\ntests/models/__init__.py\ntests/models/test_requests.py\ntests/models/test_responses.py\ntests/models/test_url.py\ntests/models/test_headers.py\ntests/test_decoders.py\ntests/common.py\ntests/utils.py\ntests/test_config.py\ntests/test_content.py\ntests/test_status_codes.py\ntests/test_multipart.py\ntests/fixtures/.netrc\ntests/test_wsgi.py\ntests/test_api.py\ntests/test_main.py\ntests/client/test_redirects.py\ntests/client/test_cookies.py\ntests/client/test_auth.py\ntests/client/test_queryparams.py\ntests/client/__init__.py\ntests/client/test_async_client.py\ntests/client/test_proxies.py\ntests/client/test_client.py\ntests/client/test_event_hooks.py\ntests/client/test_properties.py\ntests/client/test_headers.py\n",
+          "exitCode": 0,
+          "durationMs": 153
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399543976
+      },
+      "emittedAtMs": 1790399543985
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-b379822e-4548-4b30-a062-7b1fcfd0ff0a",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"find . -name AGENTS.md -o -iname '*query*' -o -iname '*url*' | head -n 100\"",
+          "cwd": "/testbed",
+          "processId": "72873",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "search",
+              "command": "find . -name AGENTS.md -o -iname '*query*' -o -iname '*url*'",
+              "query": "AGENTS.md",
+              "path": "."
+            }
+          ],
+          "aggregatedOutput": "./tests/models/test_queryparams.py\n./tests/models/test_url.py\n./tests/client/test_queryparams.py\n./httpx/_urls.py\n",
+          "exitCode": 0,
+          "durationMs": 193
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399544015
+      },
+      "emittedAtMs": 1790399544018
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-b267f082-bdd6-4474-a3a3-3109e8e7a553",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"git status --short && grep -R -n -E 'flatten_queryparams|class QueryParams' httpx tests | head -n 100\"",
+          "cwd": "/testbed",
+          "processId": "50011",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "git status --short && grep -R -n -E 'flatten_queryparams|class QueryParams' httpx tests | head -n 100"
+            }
+          ],
+          "aggregatedOutput": "httpx/_urls.py:544:class QueryParams(typing.Mapping[str, str]):\n",
+          "exitCode": 0,
+          "durationMs": 250
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399544071
+      },
+      "emittedAtMs": 1790399544074
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 38675,
+            "inputTokens": 38108,
+            "cachedInputTokens": 33024,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 567,
+            "reasoningOutputTokens": 73
+          },
+          "last": {
+            "totalTokens": 13208,
+            "inputTokens": 13013,
+            "cachedInputTokens": 9344,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 195,
+            "reasoningOutputTokens": 12
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399544083
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-48beeb20-b8b4-4568-8b60-41fedbc58588",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"sed -n '1,260p' httpx/_urls.py\"",
+          "cwd": "/testbed",
+          "processId": "9808",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "read",
+              "command": "sed -n '1,260p' httpx/_urls.py",
+              "name": "_urls.py",
+              "path": "/testbed/httpx/_urls.py"
+            }
+          ],
+          "aggregatedOutput": "import typing\nfrom urllib.parse import parse_qs, quote, unquote, urlencode\n\nimport idna\nimport rfc3986\nimport rfc3986.exceptions\n\nfrom ._exceptions import InvalidURL\nfrom ._types import PrimitiveData, QueryParamTypes, RawURL, URLTypes\nfrom ._utils import primitive_value_to_str\n\n\nclass URL:\n    \"\"\"\n    url = httpx.URL(\"HTTPS://jo%40email.com:a%20secret@müller.de:1234/pa%20th?search=ab#anchorlink\")\n\n    assert url.scheme == \"https\"\n    assert url.username == \"jo@email.com\"\n    assert url.password == \"a secret\"\n    assert url.userinfo == b\"jo%40email.com:a%20secret\"\n    assert url.host == \"müller.de\"\n    assert url.raw_host == b\"xn--mller-kva.de\"\n    assert url.port == 1234\n    assert url.netloc == b\"xn--mller-kva.de:1234\"\n    assert url.path == \"/pa th\"\n    assert url.query == b\"?search=ab\"\n    assert url.raw_path == b\"/pa%20th?search=ab\"\n    assert url.fragment == \"anchorlink\"\n\n    The components of a URL are broken down like this:\n\n       https://jo%40email.com:a%20secret@müller.de:1234/pa%20th?search=ab#anchorlink\n    [scheme]   [  username  ] [password] [ host ][port][ path ] [ query ] [fragment]\n               [       userinfo        ] [   netloc   ][    raw_path    ]\n\n    Note that:\n\n    * `url.scheme` is normalized to always be lowercased.\n\n    * `url.host` is normalized to always be lowercased. Internationalized domain\n      names are represented in unicode, without IDNA encoding applied. For instance:\n\n      url = httpx.URL(\"http://中国.icom.museum\")\n      assert url.host == \"中国.icom.museum\"\n      url = httpx.URL(\"http://xn--fiqs8s.icom.museum\")\n      assert url.host == \"中国.icom.museum\"\n\n    * `url.raw_host` is normalized to always be lowercased, and is IDNA encoded.\n\n      url = httpx.URL(\"http://中国.icom.museum\")\n      assert url.raw_host == b\"xn--fiqs8s.icom.muse\n[public excerpt truncated]\n\n        Either `<host>` or `<host>:<port>` as bytes.\n        Always normalized to lowercase, and IDNA encoded.\n\n        This property may be used for generating the value of a request\n        \"Host\" header.\n        \"\"\"\n        host = self._uri_reference.host or \"\"\n        port = self._uri_reference.port\n        netloc = host.encode(\"ascii\")\n        if port:\n            netloc = netloc + b\":\" + port.encode(\"ascii\")\n        return netloc\n\n    @property\n    def path(self) -> str:\n        \"\"\"\n        The URL path as a string. Excluding the query string, and URL decoded.\n\n        For example:\n\n        url = httpx.URL(\"https://example.com/pa%20th\")\n        assert url.path == \"/pa th\"\n        \"\"\"\n",
+          "exitCode": 0,
+          "durationMs": 115,
+          "aggregatedOutput_sha256": "24a94c67d33380053210912bf6b380ab34482af59f3c62c18f1fd2f3f06a8345",
+          "aggregatedOutput_original_characters": 8914
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399549341
+      },
+      "emittedAtMs": 1790399549350
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-3d91f8ec-4f7e-4c5e-8d35-890d488e14ef",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'cat .agents/* .codex/* 2>/dev/null'",
+          "cwd": "/testbed",
+          "processId": "25157",
+          "source": "unifiedExecStartup",
+          "status": "failed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "cat .agents/* .codex/* 2>/dev/null"
+            }
+          ],
+          "aggregatedOutput": null,
+          "exitCode": 1,
+          "durationMs": 121
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399549346
+      },
+      "emittedAtMs": 1790399549355
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-1778d17b-da1d-482e-971e-dbbea1a9aaf4",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"cat tests/client/test_queryparams.py && grep -R -n 'flatten_queryparams\\\\|unquote\\\\|quote_plus\\\\|QueryParams(' httpx | head -n 120\"",
+          "cwd": "/testbed",
+          "processId": "68258",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "read",
+              "command": "cat tests/client/test_queryparams.py",
+              "name": "test_queryparams.py",
+              "path": "/testbed/tests/client/test_queryparams.py"
+            },
+            {
+              "type": "search",
+              "command": "grep -R -n \"flatten_queryparams\\\\|unquote\\\\|quote_plus\\\\|QueryParams(\" httpx",
+              "query": "flatten_queryparams\\|unquote\\|quote_plus\\|QueryParams(",
+              "path": "httpx"
+            }
+          ],
+          "aggregatedOutput": "import httpx\n\n\ndef hello_world(request: httpx.Request) -> httpx.Response:\n    return httpx.Response(200, text=\"Hello, world\")\n\n\ndef test_client_queryparams():\n    client = httpx.Client(params={\"a\": \"b\"})\n    assert isinstance(client.params, httpx.QueryParams)\n    assert client.params[\"a\"] == \"b\"\n\n\ndef test_client_queryparams_string():\n    client = httpx.Client(params=\"a=b\")\n    assert isinstance(client.params, httpx.QueryParams)\n    assert client.params[\"a\"] == \"b\"\n\n    client = httpx.Client()\n    client.params = \"a=b\"  # type: ignore\n    assert isinstance(client.params, httpx.QueryParams)\n    assert client.params[\"a\"] == \"b\"\n\n\ndef test_client_queryparams_echo():\n    url = \"http://example.org/echo_queryparams\"\n    client_queryparams = \"first=str\"\n    request_queryparams = {\"second\": \"dict\"}\n    client = httpx.Client(\n        transport=httpx.MockTransport(hello_world), params=client_queryparams\n    )\n    response = client.get(url, params=request_queryparams)\n\n    assert response.status_code == 200\n    assert response.url == \"http://example.org/echo_queryparams?first=str&second=dict\"\nhttpx/_urls.py:2:from urllib.parse import parse_qs, quote, unquote, urlencode\nhttpx/_urls.py:148:        return unquote(userinfo.partition(\":\")[0])\nhttpx/_urls.py:157:        return unquote(userinfo.partition(\":\")[2])\nhttpx/_urls.py:262:        return unquote(path)\nhttpx/_urls.py:287:        return QueryParams(self._uri_reference.query)\nhttpx/_urls.py:312:        return unquote(self._uri_reference.fragment or \"\")\nhttpx/_urls.py:455:                kwargs[\"query\"] = None if not params else str(QueryParams(params))\nhttpx/_urls.py:544:class QueryParams(typing.Mapping[str, str]):\nhttpx/_urls.py:596:        q = httpx.QueryParams(\"a=123&a=456&b=789\")\nhttpx/_urls.py:608:        q = httpx.QueryParams\n[public excerpt truncated]\n\nhttpx/_urls.py:715:        q = httpx.QueryParams(\"a=123\")\nhttpx/_urls.py:717:        assert q == httpx.QueryParams(\"a=123&b=456\")\nhttpx/_urls.py:719:        q = httpx.QueryParams(\"a=123\")\nhttpx/_urls.py:721:        assert q == httpx.QueryParams(\"a=456&b=789\")\nhttpx/_urls.py:723:        q = QueryParams(params)\nhttpx/_client.py:182:        self._params = QueryParams(params)\nhttpx/_client.py:320:        self._params = QueryParams(params)\nhttpx/_client.py:427:            merged_queryparams = QueryParams(self.params)\nhttpx/_auth.py:11:from ._utils import to_bytes, to_str, unquote\nhttpx/_auth.py:209:            header_dict[key] = unquote(value)\nhttpx/_utils.py:357:def unquote(value: str) -> str:\n",
+          "exitCode": 0,
+          "durationMs": 222,
+          "aggregatedOutput_sha256": "e146a14537ea0ec09aa5bf7c63ceeacf1fdcb33de998d5e83114de6ee3723f26",
+          "aggregatedOutput_original_characters": 3309
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399549448
+      },
+      "emittedAtMs": 1790399549450
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-2cd3af8b-cd34-4e27-8e75-0386b5ca991a",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"sed -n '500,760p' httpx/_urls.py && cat tests/models/test_queryparams.py\"",
+          "cwd": "/testbed",
+          "processId": "56039",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "read",
+              "command": "sed -n '500,760p' httpx/_urls.py",
+              "name": "_urls.py",
+              "path": "/testbed/httpx/_urls.py"
+            },
+            {
+              "type": "read",
+              "command": "cat tests/models/test_queryparams.py",
+              "name": "test_queryparams.py",
+              "path": "/testbed/tests/models/test_queryparams.py"
+            }
+          ],
+          "aggregatedOutput": "        url = httpx.URL(\"https://www.example.com/test\")\n        url = url.join(\"/new/path\")\n        assert url == \"https://www.example.com/new/path\"\n        \"\"\"\n        if self.is_relative_url:\n            # Workaround to handle relative URLs, which otherwise raise\n            # rfc3986.exceptions.ResolutionError when used as an argument\n            # in `.resolve_with`.\n            return (\n                self.copy_with(scheme=\"http\", host=\"example.com\")\n                .join(url)\n                .copy_with(scheme=None, host=None)\n            )\n\n        # We drop any fragment portion, because RFC 3986 strictly\n        # treats URLs with a fragment portion as not being absolute URLs.\n        base_uri = self._uri_reference.copy_with(fragment=None)\n        relative_url = URL(url)\n        return URL(relative_url._uri_reference.resolve_with(base_uri).unsplit())\n\n    def __hash__(self) -> int:\n        return hash(str(self))\n\n    def __eq__(self, other: typing.Any) -> bool:\n        return isinstance(other, (URL, str)) and str(self) == str(URL(other))\n\n    def __str__(self) -> str:\n        return typing.cast(str, self._uri_reference.unsplit())\n\n    def __repr__(self) -> str:\n        class_name = self.__class__.__name__\n        url_str = str(self)\n        if self._uri_reference.userinfo:\n            # Mask any password component in the URL representation, to lower the\n            # risk of unintended leakage, such as in debug information and logging.\n            username = quote(self.username)\n            url_str = (\n                rfc3986.urlparse(url_str)\n                .copy_with(userinfo=f\"{username}:[secure]\")\n                .unsplit()\n            )\n        return f\"{class_name}({url_str!r})\"\n\n\nclass QueryParams(typing.Mapping[str, str]):\n    \"\"\"\n    URL query paramete\n[public excerpt truncated]\nms(\"a=123\")\n    q = q.add(\"a\", \"456\")\n    assert q == httpx.QueryParams(\"a=123&a=456\")\n\n\ndef test_queryparam_remove():\n    q = httpx.QueryParams(\"a=123\")\n    q = q.remove(\"a\")\n    assert q == httpx.QueryParams(\"\")\n\n\ndef test_queryparam_merge():\n    q = httpx.QueryParams(\"a=123\")\n    q = q.merge({\"b\": \"456\"})\n    assert q == httpx.QueryParams(\"a=123&b=456\")\n    q = q.merge({\"a\": \"000\", \"c\": \"789\"})\n    assert q == httpx.QueryParams(\"a=000&b=456&c=789\")\n\n\ndef test_queryparams_are_hashable():\n    params = (\n        httpx.QueryParams(\"a=123\"),\n        httpx.QueryParams({\"a\": 123}),\n        httpx.QueryParams(\"b=456\"),\n        httpx.QueryParams({\"b\": 456}),\n    )\n\n    assert len(set(params)) == 2\n",
+          "exitCode": 0,
+          "durationMs": 225,
+          "aggregatedOutput_sha256": "af338f2e267cf26057ad9f87f64933f9b3e4af7da4a5666d89ca423da0b235be",
+          "aggregatedOutput_original_characters": 12532
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399549463
+      },
+      "emittedAtMs": 1790399549466
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 53082,
+            "inputTokens": 52291,
+            "cachedInputTokens": 45440,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 791,
+            "reasoningOutputTokens": 84
+          },
+          "last": {
+            "totalTokens": 14407,
+            "inputTokens": 14183,
+            "cachedInputTokens": 12416,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 224,
+            "reasoningOutputTokens": 11
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399549476
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-b9778e62-969f-46bb-a1ae-6ed0c89efc88",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"grep -R -n 'def primitive_value_to_str\\\\|PrimitiveData\\\\|QueryParamTypes' httpx/_utils.py httpx/_types.py && sed -n '300,380p' httpx/_utils.py && sed -n '20,85p' httpx/_types.py\"",
+          "cwd": "/testbed",
+          "processId": "52942",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "search",
+              "command": "grep -R -n \"def primitive_value_to_str\\\\|PrimitiveData\\\\|QueryParamTypes\" httpx/_utils.py httpx/_types.py",
+              "query": "def primitive_value_to_str\\|PrimitiveData\\|QueryParamTypes",
+              "path": "_utils.py"
+            },
+            {
+              "type": "read",
+              "command": "sed -n '300,380p' httpx/_utils.py",
+              "name": "_utils.py",
+              "path": "/testbed/httpx/_utils.py"
+            },
+            {
+              "type": "read",
+              "command": "sed -n '20,85p' httpx/_types.py",
+              "name": "_types.py",
+              "path": "/testbed/httpx/_types.py"
+            }
+          ],
+          "aggregatedOutput": "httpx/_utils.py:16:from ._types import PrimitiveData\nhttpx/_utils.py:58:def primitive_value_to_str(value: \"PrimitiveData\") -> str:\nhttpx/_types.py:33:PrimitiveData = Optional[Union[str, int, float, bool]]\nhttpx/_types.py:47:QueryParamTypes = Union[\nhttpx/_types.py:49:    Mapping[str, Union[PrimitiveData, Sequence[PrimitiveData]]],\nhttpx/_types.py:50:    List[Tuple[str, PrimitiveData]],\nhttpx/_types.py:51:    Tuple[Tuple[str, PrimitiveData], ...],\n        url.scheme == \"http\"\n        and port_or_default(url) == 80\n        and location.scheme == \"https\"\n        and port_or_default(location) == 443\n    )\n\n\ndef get_environment_proxies() -> typing.Dict[str, typing.Optional[str]]:\n    \"\"\"Gets proxy information from the environment\"\"\"\n\n    # urllib.request.getproxies() falls back on System\n    # Registry and Config for proxies on Windows and macOS.\n    # We don't want to propagate non-HTTP proxies into\n    # our configuration such as 'TRAVIS_APT_PROXY'.\n    proxy_info = getproxies()\n    mounts: typing.Dict[str, typing.Optional[str]] = {}\n\n    for scheme in (\"http\", \"https\", \"all\"):\n        if proxy_info.get(scheme):\n            hostname = proxy_info[scheme]\n            mounts[f\"{scheme}://\"] = (\n                hostname if \"://\" in hostname else f\"http://{hostname}\"\n            )\n\n    no_proxy_hosts = [host.strip() for host in proxy_info.get(\"no\", \"\").split(\",\")]\n    for hostname in no_proxy_hosts:\n        # See https://curl.haxx.se/libcurl/c/CURLOPT_NOPROXY.html for details\n        # on how names in `NO_PROXY` are handled.\n        if hostname == \"*\":\n            # If NO_PROXY=* is used or if \"*\" occurs as any one of the comma\n            # separated hostnames, then we should just bypass any information\n            # from HTTP_PROXY, HTTPS_PROXY, ALL_PROXY, and always ignore\n \n[public excerpt truncated]\n],\n    Sequence[Tuple[bytes, bytes]],\n]\n\nCookieTypes = Union[\"Cookies\", CookieJar, Dict[str, str], List[Tuple[str, str]]]\n\nCertTypes = Union[\n    # certfile\n    str,\n    # (certfile, keyfile)\n    Tuple[str, Optional[str]],\n    # (certfile, keyfile, password)\n    Tuple[str, Optional[str], Optional[str]],\n]\nVerifyTypes = Union[str, bool, ssl.SSLContext]\nTimeoutTypes = Union[\n    Optional[float],\n    Tuple[Optional[float], Optional[float], Optional[float], Optional[float]],\n    \"Timeout\",\n]\nProxiesTypes = Union[URLTypes, \"Proxy\", Dict[URLTypes, Union[None, URLTypes, \"Proxy\"]]]\n\nAuthTypes = Union[\n    Tuple[Union[str, bytes], Union[str, bytes]],\n    Callable[[\"Request\"], \"Request\"],\n    \"Auth\",\n",
+          "exitCode": 0,
+          "durationMs": 142,
+          "aggregatedOutput_sha256": "c8ac1abb79135aa7bcacc14aaef435c79800721de479c41064b8c788ea7b7b88",
+          "aggregatedOutput_original_characters": 5149
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399555268
+      },
+      "emittedAtMs": 1790399555276
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-4c552e2e-8083-4e10-bd17-493bc6dc7ae6",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"sed -n '400,475p' httpx/_urls.py && sed -n '400,445p' httpx/_client.py && sed -n '1,220p' tests/models/test_url.py\"",
+          "cwd": "/testbed",
+          "processId": "96579",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "read",
+              "command": "sed -n '400,475p' httpx/_urls.py",
+              "name": "_urls.py",
+              "path": "/testbed/httpx/_urls.py"
+            },
+            {
+              "type": "read",
+              "command": "sed -n '400,445p' httpx/_client.py",
+              "name": "_client.py",
+              "path": "/testbed/httpx/_client.py"
+            },
+            {
+              "type": "read",
+              "command": "sed -n '1,220p' tests/models/test_url.py",
+              "name": "test_url.py",
+              "path": "/testbed/tests/models/test_url.py"
+            }
+          ],
+          "aggregatedOutput": "\n        if \"host\" in kwargs or \"port\" in kwargs:\n            # Consolidate \"host\" and \"port\" into \"netloc\".\n            host = kwargs.pop(\"host\", self.host) or \"\"\n            port = kwargs.pop(\"port\", self.port)\n\n            if host and \":\" in host and host[0] != \"[\":\n                # IPv6 addresses need to be escaped within square brackets.\n                host = f\"[{host}]\"\n\n            kwargs[\"netloc\"] = (\n                f\"{host}:{port}\".encode(\"ascii\")\n                if port is not None\n                else host.encode(\"ascii\")\n            )\n\n        if \"userinfo\" in kwargs or \"netloc\" in kwargs:\n            # Consolidate \"userinfo\" and \"netloc\" into authority.\n            userinfo = (kwargs.pop(\"userinfo\", self.userinfo) or b\"\").decode(\"ascii\")\n            netloc = (kwargs.pop(\"netloc\", self.netloc) or b\"\").decode(\"ascii\")\n            authority = f\"{userinfo}@{netloc}\" if userinfo else netloc\n            kwargs[\"authority\"] = authority\n\n        # Step 3\n        # ======\n        #\n        # Wrangle any \"path\", \"query\", \"raw_path\" and \"params\" keywords into\n        # \"query\" and \"path\" keywords for `rfc3986`.\n        if \"raw_path\" in kwargs:\n            # If \"raw_path\" is included, then split it into \"path\" and \"query\" components.\n            raw_path = kwargs.pop(\"raw_path\") or b\"\"\n            path, has_query, query = raw_path.decode(\"ascii\").partition(\"?\")\n            kwargs[\"path\"] = path\n            kwargs[\"query\"] = query if has_query else None\n\n        else:\n            if kwargs.get(\"path\") is not None:\n                # Ensure `kwargs[\"path\"] = <url quoted str>` for `rfc3986`.\n                kwargs[\"path\"] = quote(kwargs[\"path\"])\n\n            if kwargs.get(\"query\") is not None:\n                # Ensure `kwargs[\"query\"] = <str>` for `rfc3986`.\n           \n[public excerpt truncated]\nsert url.join(\"..g\") == \"http://example.com/b/c/..g\"\n\n    assert url.join(\"./../g\") == \"http://example.com/b/g\"\n    assert url.join(\"./g/.\") == \"http://example.com/b/c/g/\"\n    assert url.join(\"g/./h\") == \"http://example.com/b/c/g/h\"\n    assert url.join(\"g/../h\") == \"http://example.com/b/c/h\"\n    assert url.join(\"g;x=1/./y\") == \"http://example.com/b/c/g;x=1/y\"\n    assert url.join(\"g;x=1/../y\") == \"http://example.com/b/c/y\"\n\n    assert url.join(\"g?y/./x\") == \"http://example.com/b/c/g?y/./x\"\n    assert url.join(\"g?y/../x\") == \"http://example.com/b/c/g?y/../x\"\n    assert url.join(\"g#s/./x\") == \"http://example.com/b/c/g#s/./x\"\n    assert url.join(\"g#s/../x\") == \"http://example.com/b/c/g#s/../x\"\n\n",
+          "exitCode": 0,
+          "durationMs": 163,
+          "aggregatedOutput_sha256": "87967367e50714b9e44a65e06745d6247c50d05f4113cf9fbaab99d71c7e8f84",
+          "aggregatedOutput_original_characters": 12448
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399555315
+      },
+      "emittedAtMs": 1790399555318
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-7a9b16eb-9acf-4242-96d5-cfa8a580d22b",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'cat pyproject.toml && cat setup.cfg && git log -1 --oneline'",
+          "cwd": "/testbed",
+          "processId": "47274",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "cat pyproject.toml && cat setup.cfg && git log -1 --oneline"
+            }
+          ],
+          "aggregatedOutput": "[build-system]\nrequires = [\"hatchling\", \"hatch-fancy-pypi-readme\"]\nbuild-backend = \"hatchling.build\"\n\n[project]\nname = \"httpx\"\ndescription = \"The next generation HTTP client.\"\nlicense = \"BSD-3-Clause\"\nrequires-python = \">=3.7\"\nauthors = [\n    { name = \"Tom Christie\", email = \"tom@tomchristie.com\" },\n]\nclassifiers = [\n    \"Development Status :: 4 - Beta\",\n    \"Environment :: Web Environment\",\n    \"Framework :: AsyncIO\",\n    \"Framework :: Trio\",\n    \"Intended Audience :: Developers\",\n    \"License :: OSI Approved :: BSD License\",\n    \"Operating System :: OS Independent\",\n    \"Programming Language :: Python :: 3\",\n    \"Programming Language :: Python :: 3 :: Only\",\n    \"Programming Language :: Python :: 3.7\",\n    \"Programming Language :: Python :: 3.8\",\n    \"Programming Language :: Python :: 3.9\",\n    \"Programming Language :: Python :: 3.10\",\n    \"Programming Language :: Python :: 3.11\",\n    \"Topic :: Internet :: WWW/HTTP\",\n]\ndependencies = [\n    \"certifi\",\n    \"httpcore>=0.15.0,<0.17.0\",\n    \"rfc3986[idna2008]>=1.3,<2\",\n    \"sniffio\",\n]\ndynamic = [\"readme\", \"version\"]\n\n[project.optional-dependencies]\nbrotli = [\n    \"brotli; platform_python_implementation == 'CPython'\",\n    \"brotlicffi; platform_python_implementation != 'CPython'\",\n]\ncli = [\n    \"click==8.*\",\n    \"pygments==2.*\",\n    \"rich>=10,<13\",\n]\nhttp2 = [\n    \"h2>=3,<5\",\n]\nsocks = [\n    \"socksio==1.*\",\n]\n\n[project.scripts]\nhttpx = \"httpx:main\"\n\n[project.urls]\nChangelog = \"https://github.com/encode/httpx/blob/master/CHANGELOG.md\"\nDocumentation = \"https://www.python-httpx.org\"\nHomepage = \"https://github.com/encode/httpx\"\nSource = \"https://github.com/encode/httpx\"\n\n[tool.hatch.version]\npath = \"httpx/__version__.py\"\n\n[tool.hatch.build.targets.sdist]\ninclude = [\n    \"/httpx\",\n    \"/CHANGELOG.md\",\n    \"/README.md\",\n]\n\n[tool.\n[public excerpt truncated]\n = W503, E203, B305, PIE801\nmax-line-length = 120\n\n[mypy]\nignore_missing_imports = True\nstrict = True\n\n[mypy-tests.*]\ndisallow_untyped_defs = False\ncheck_untyped_defs = True\n\n[tool:isort]\nprofile = black\ncombine_as_imports = True\n\n[tool:pytest]\naddopts = -rxXs\nfilterwarnings =\n  error\nasyncio_mode = strict\nmarkers =\n  copied_from(source, changes=None): mark test as copied from somewhere else, along with a description of changes made to accodomate e.g. our test setup\n  network: marks tests which require network connection. Used in 3rd-party build environments that have network disabled.\n\n[coverage:run]\nomit = venv/*, httpx/_compat.py\ninclude = httpx/*, tests/*\n10a3b68 Delete setup.py (#2516)\n",
+          "exitCode": 0,
+          "durationMs": 165,
+          "aggregatedOutput_sha256": "08988b1ada2ac5854aaa42cb29ac52e61a6e9c93aa223bca7b0133f3ed66e8bf",
+          "aggregatedOutput_original_characters": 2745
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399555348
+      },
+      "emittedAtMs": 1790399555351
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 75584,
+            "inputTokens": 74538,
+            "cachedInputTokens": 59392,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 1046,
+            "reasoningOutputTokens": 113
+          },
+          "last": {
+            "totalTokens": 22502,
+            "inputTokens": 22247,
+            "cachedInputTokens": 13952,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 255,
+            "reasoningOutputTokens": 29
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399555360
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-6b92ca45-6a14-42e1-97b2-b7a2906a5cb7",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"sed -n '1,85p' httpx/_utils.py && grep -R -n 'primitive_value_to_str' httpx tests | head -n 80 && grep -R -n 'bytes.*param\\\\|param.*bytes' tests docs httpx | head -n 80\"",
+          "cwd": "/testbed",
+          "processId": "48082",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "read",
+              "command": "sed -n '1,85p' httpx/_utils.py",
+              "name": "_utils.py",
+              "path": "/testbed/httpx/_utils.py"
+            },
+            {
+              "type": "search",
+              "command": "grep -R -n primitive_value_to_str httpx tests",
+              "query": "primitive_value_to_str",
+              "path": "httpx"
+            },
+            {
+              "type": "search",
+              "command": "grep -R -n \"bytes.*param\\\\|param.*bytes\" tests docs httpx",
+              "query": "bytes.*param\\|param.*bytes",
+              "path": "tests"
+            }
+          ],
+          "aggregatedOutput": "import codecs\nimport email.message\nimport logging\nimport mimetypes\nimport netrc\nimport os\nimport re\nimport sys\nimport time\nimport typing\nfrom pathlib import Path\nfrom urllib.request import getproxies\n\nimport sniffio\n\nfrom ._types import PrimitiveData\n\nif typing.TYPE_CHECKING:  # pragma: no cover\n    from ._urls import URL\n\n\n_HTML5_FORM_ENCODING_REPLACEMENTS = {'\"': \"%22\", \"\\\\\": \"\\\\\\\\\"}\n_HTML5_FORM_ENCODING_REPLACEMENTS.update(\n    {chr(c): \"%{:02X}\".format(c) for c in range(0x1F + 1) if c != 0x1B}\n)\n_HTML5_FORM_ENCODING_RE = re.compile(\n    r\"|\".join([re.escape(c) for c in _HTML5_FORM_ENCODING_REPLACEMENTS.keys()])\n)\n\n\ndef normalize_header_key(\n    value: typing.Union[str, bytes],\n    lower: bool,\n    encoding: typing.Optional[str] = None,\n) -> bytes:\n    \"\"\"\n    Coerce str/bytes into a strictly byte-wise HTTP header key.\n    \"\"\"\n    if isinstance(value, bytes):\n        bytes_value = value\n    else:\n        bytes_value = value.encode(encoding or \"ascii\")\n\n    return bytes_value.lower() if lower else bytes_value\n\n\ndef normalize_header_value(\n    value: typing.Union[str, bytes], encoding: typing.Optional[str] = None\n) -> bytes:\n    \"\"\"\n    Coerce str/bytes into a strictly byte-wise HTTP header value.\n    \"\"\"\n    if isinstance(value, bytes):\n        return value\n    return value.encode(encoding or \"ascii\")\n\n\ndef primitive_value_to_str(value: \"PrimitiveData\") -> str:\n    \"\"\"\n    Coerce a primitive data type into a string value.\n\n    Note that we prefer JSON-style 'true'/'false' for boolean values here.\n    \"\"\"\n    if value is True:\n        return \"true\"\n    elif value is False:\n        return \"false\"\n    elif value is None:\n        return \"\"\n    return str(value)\n\n\ndef is_known_encoding(encoding: str) -> bool:\n    \"\"\"\n    Return `True` if `encoding` is a known codec.\n    \"\"\n[public excerpt truncated]\ntr(value)]\nhttpx/_urls.py:691:        q._dict[str(key)] = q.get_list(key) + [primitive_value_to_str(value)]\nhttpx/_multipart.py:19:    primitive_value_to_str,\nhttpx/_multipart.py:56:            value if isinstance(value, bytes) else primitive_value_to_str(value)\nhttpx/_content.py:28:from ._utils import peek_filelike_length, primitive_value_to_str\nhttpx/_content.py:143:            plain_data.extend([(key, primitive_value_to_str(item)) for item in value])\nhttpx/_content.py:145:            plain_data.append((key, primitive_value_to_str(value)))\nhttpx/_utils.py:58:def primitive_value_to_str(value: \"PrimitiveData\") -> str:\nhttpx/_utils.py:84:def format_form_param(name: str, value: str) -> bytes:\n",
+          "exitCode": 0,
+          "durationMs": 93,
+          "aggregatedOutput_sha256": "567817322396d34d2b831b89f7a9a3725b9f5adbe75884ad68ad1029a13728cd",
+          "aggregatedOutput_original_characters": 2886
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399564999
+      },
+      "emittedAtMs": 1790399565006
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 104887,
+            "inputTokens": 103394,
+            "cachedInputTokens": 81408,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 1493,
+            "reasoningOutputTokens": 458
+          },
+          "last": {
+            "totalTokens": 29303,
+            "inputTokens": 28856,
+            "cachedInputTokens": 22016,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 447,
+            "reasoningOutputTokens": 345
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399565018
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "msg_07d2747524ae21d2016ab75454bfb887d0b2332cd9d9f69a93",
+          "text": "The current code converts mapping keys with `str(key)` and values through a helper that also calls `str(value)`, which produces the `b'...'` text. I’ll normalize bytes before storing them and check that both UTF-8 bytes and arbitrary byte values encode correctly.",
+          "phase": "commentary",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399576236
+      },
+      "emittedAtMs": 1790399576241
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-5b7e15d4-f308-44c6-90db-a1b5865b94f6",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"/opt/conda/envs/testbed/bin/python - <<'PY'\nimport urllib.parse\nimport httpx\nfor params in ({b'testparam': b'testvalue'}, {b'caf\\\\xc3\\\\xa9': b'na\\\\xc3\\\\xafve'}, {b'raw\\\\xff': b'\\\\x00\\\\xff'}):\n    print(params, urllib.parse.urlencode(params), httpx.URL('https://example.org', params=params))\nPY\"",
+          "cwd": "/testbed",
+          "processId": "26919",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python - <<'PY'\nimport urllib.parse\nimport httpx\nfor params in ({b'testparam': b'testvalue'}, {b'caf\\xc3\\xa9': b'na\\xc3\\xafve'}, {b'raw\\xff': b'\\x00\\xff'}):\n    print(params, urllib.parse.urlencode(params), httpx.URL('https://example.org', params=params))\nPY"
+            }
+          ],
+          "aggregatedOutput": "{b'testparam': b'testvalue'} testparam=testvalue https://example.org?b%27testparam%27=b%27testvalue%27\n{b'caf\\xc3\\xa9': b'na\\xc3\\xafve'} caf%C3%A9=na%C3%AFve https://example.org?b%27caf%5Cxc3%5Cxa9%27=b%27na%5Cxc3%5Cxafve%27\n{b'raw\\xff': b'\\x00\\xff'} raw%FF=%00%FF https://example.org?b%27raw%5Cxff%27=b%27%5Cx00%5Cxff%27\n",
+          "exitCode": 0,
+          "durationMs": 4934
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399581703
+      },
+      "emittedAtMs": 1790399581715
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 135511,
+            "inputTokens": 133455,
+            "cachedInputTokens": 110080,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 2056,
+            "reasoningOutputTokens": 814
+          },
+          "last": {
+            "totalTokens": 30624,
+            "inputTokens": 30061,
+            "cachedInputTokens": 28672,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 563,
+            "reasoningOutputTokens": 356
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399581724
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-4e051741-c1cf-4a88-aada-d9cc85ed95e9",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"sed -n '120,165p' httpx/_content.py && sed -n '40,90p' httpx/_multipart.py && sed -n '740,790p' httpx/_urls.py && sed -n '325,380p' httpx/_urls.py\"",
+          "cwd": "/testbed",
+          "processId": "76627",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "read",
+              "command": "sed -n '120,165p' httpx/_content.py",
+              "name": "_content.py",
+              "path": "/testbed/httpx/_content.py"
+            },
+            {
+              "type": "read",
+              "command": "sed -n '40,90p' httpx/_multipart.py",
+              "name": "_multipart.py",
+              "path": "/testbed/httpx/_multipart.py"
+            },
+            {
+              "type": "read",
+              "command": "sed -n '740,790p' httpx/_urls.py",
+              "name": "_urls.py",
+              "path": "/testbed/httpx/_urls.py"
+            },
+            {
+              "type": "read",
+              "command": "sed -n '325,380p' httpx/_urls.py",
+              "name": "_urls.py",
+              "path": "/testbed/httpx/_urls.py"
+            }
+          ],
+          "aggregatedOutput": "        # otherwise pass through here, like any other bytes-iterable,\n        # because `dict` happens to be iterable. See issue #2491.\n        content_length_or_none = peek_filelike_length(content)\n\n        if content_length_or_none is None:\n            headers = {\"Transfer-Encoding\": \"chunked\"}\n        else:\n            headers = {\"Content-Length\": str(content_length_or_none)}\n        return headers, IteratorByteStream(content)  # type: ignore\n\n    elif isinstance(content, AsyncIterable):\n        headers = {\"Transfer-Encoding\": \"chunked\"}\n        return headers, AsyncIteratorByteStream(content)\n\n    raise TypeError(f\"Unexpected type for 'content', {type(content)!r}\")\n\n\ndef encode_urlencoded_data(\n    data: RequestData,\n) -> Tuple[Dict[str, str], ByteStream]:\n    plain_data = []\n    for key, value in data.items():\n        if isinstance(value, (list, tuple)):\n            plain_data.extend([(key, primitive_value_to_str(item)) for item in value])\n        else:\n            plain_data.append((key, primitive_value_to_str(value)))\n    body = urlencode(plain_data, doseq=True).encode(\"utf-8\")\n    content_length = str(len(body))\n    content_type = \"application/x-www-form-urlencoded\"\n    headers = {\"Content-Length\": content_length, \"Content-Type\": content_type}\n    return headers, ByteStream(body)\n\n\ndef encode_multipart_data(\n    data: RequestData, files: RequestFiles, boundary: Optional[bytes]\n) -> Tuple[Dict[str, str], MultipartStream]:\n    multipart = MultipartStream(data=data, files=files, boundary=boundary)\n    headers = multipart.get_headers()\n    return headers, multipart\n\n\ndef encode_text(text: str) -> Tuple[Dict[str, str], ByteStream]:\n    body = text.encode(\"utf-8\")\n    content_length = str(len(body))\n    content_type = \"text/plain; charset=utf-8\"\n    headers = {\"Conten\n[public excerpt truncated]\nopy_with(username=\"jo@gmail.com\", password=\"a secret\")\n        assert url == \"https://jo%40email.com:a%20secret@www.example.com\"\n        \"\"\"\n        allowed = {\n            \"scheme\": str,\n            \"username\": str,\n            \"password\": str,\n            \"userinfo\": bytes,\n            \"host\": str,\n            \"port\": int,\n            \"netloc\": bytes,\n            \"path\": str,\n            \"query\": bytes,\n            \"raw_path\": bytes,\n            \"fragment\": str,\n            \"params\": object,\n        }\n\n        # Step 1\n        # ======\n        #\n        # Perform type checking for all supported keyword arguments.\n        for key, value in kwargs.items():\n            if key not in allowed:\n",
+          "exitCode": 0,
+          "durationMs": 64,
+          "aggregatedOutput_sha256": "8747c75435fb6a795879e0a2dc6cd984cba26b9f323013efab6f9585ad52f6dc",
+          "aggregatedOutput_original_characters": 6299
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399585806
+      },
+      "emittedAtMs": 1790399585810
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 166467,
+            "inputTokens": 164255,
+            "cachedInputTokens": 139904,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 2212,
+            "reasoningOutputTokens": 870
+          },
+          "last": {
+            "totalTokens": 30956,
+            "inputTokens": 30800,
+            "cachedInputTokens": 29824,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 156,
+            "reasoningOutputTokens": 56
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399585823
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "fileChange",
+          "id": "exec-dd44f9c8-4d56-4e70-814f-1debdbd8f3aa",
+          "changes": [
+            {
+              "path": "/testbed/httpx/_types.py",
+              "kind": {
+                "type": "update",
+                "move_path": null
+              },
+              "diff": "@@ -48,5 +48,5 @@\n     \"QueryParams\",\n-    Mapping[str, Union[PrimitiveData, Sequence[PrimitiveData]]],\n-    List[Tuple[str, PrimitiveData]],\n-    Tuple[Tuple[str, PrimitiveData], ...],\n+    Mapping[Union[str, bytes], Union[PrimitiveData, bytes, Sequence[Union[PrimitiveData, bytes]]]],\n+    List[Tuple[Union[str, bytes], Union[PrimitiveData, bytes]]],\n+    Tuple[Tuple[Union[str, bytes], Union[PrimitiveData, bytes]], ...],\n     str,\n"
+            },
+            {
+              "path": "/testbed/httpx/_urls.py",
+              "kind": {
+                "type": "update",
+                "move_path": null
+              },
+              "diff": "@@ -12,2 +12,8 @@\n \n+def _query_param_to_str(value: typing.Any) -> str:\n+    if isinstance(value, bytes):\n+        return value.decode(\"utf-8\", errors=\"surrogateescape\")\n+    return primitive_value_to_str(value)\n+\n+\n class URL:\n@@ -556,6 +562,7 @@\n \n-        items: typing.Sequence[typing.Tuple[str, PrimitiveData]]\n         if value is None or isinstance(value, (str, bytes)):\n             value = value.decode(\"ascii\") if isinstance(value, bytes) else value\n-            self._dict = parse_qs(value, keep_blank_values=True)\n+            self._dict = parse_qs(\n+                value, keep_blank_values=True, errors=\"surrogateescape\"\n+            )\n         elif isinstance(value, QueryParams):\n@@ -585,3 +592,3 @@\n             self._dict = {\n-                str(k): [primitive_value_to_str(item) for item in v]\n+                _query_param_to_str(k): [_query_param_to_str(item) for item in v]\n                 for k, v in dict_value.items()\n@@ -663,3 +670,3 @@\n \n-    def set(self, key: str, value: typing.Any = None) -> \"QueryParams\":\n+    def set(self, key: typing.Union[str, bytes], value: typing.Any = None) -> \"QueryParams\":\n         \"\"\"\n@@ -675,6 +682,6 @@\n         q._dict = dict(self._dict)\n-        q._dict[str(key)] = [primitive_value_to_str(value)]\n+        q._dict[_query_param_to_str(key)] = [_query_param_to_str(value)]\n         return q\n \n-    def add(self, key: str, value: typing.Any = None) -> \"QueryParams\":\n+    def add(self, key: typing.Union[str, bytes], value: typing.Any = None) -> \"QueryParams\":\n         \"\"\"\n@@ -690,3 +697,4 @@\n         q._dict = dict(self._dict)\n-        q._dict[str(key)] = q.get_list(key) + [primitive_value_to_str(value)]\n+        key = _query_param_to_str(key)\n+        q._dict[key] = q.get_list(key) + [_query_param_to_str(value)]\n         return q\n@@ -750,3 +758,3 @@\n     def __str__(self) -> str:\n-        return urlencode(self.multi_items())\n+        return urlencode(self.multi_items(), errors=\"surrogateescape\")\n \n"
+            }
+          ],
+          "status": "completed"
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399613363
+      },
+      "emittedAtMs": 1790399613378
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 200342,
+            "inputTokens": 196669,
+            "cachedInputTokens": 170496,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 3673,
+            "reasoningOutputTokens": 1658
+          },
+          "last": {
+            "totalTokens": 33875,
+            "inputTokens": 32414,
+            "cachedInputTokens": 30592,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 1461,
+            "reasoningOutputTokens": 788
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399613390
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-1d072d3e-09bb-41df-a438-96902447ff6b",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"grep -n 'PrimitiveData' httpx/_urls.py && /opt/conda/envs/testbed/bin/python - <<'PY'\nimport httpx\nfor p in ({b'testparam': b'testvalue'}, [(b'café'.decode().encode(), b'naïve'.decode().encode())], {b'raw\\\\xff': [b'\\\\x00\\\\xff', b'ok']}):\n    q = httpx.QueryParams(p)\n    print(str(q), httpx.URL('https://example.org', params=p), q.multi_items())\nPY\"",
+          "cwd": "/testbed",
+          "processId": "55813",
+          "source": "unifiedExecStartup",
+          "status": "failed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "grep -n 'PrimitiveData' httpx/_urls.py && /opt/conda/envs/testbed/bin/python - <<'PY'\nimport httpx\nfor p in ({b'testparam': b'testvalue'}, [(b'café'.decode().encode(), b'naïve'.decode().encode())], {b'raw\\xff': [b'\\x00\\xff', b'ok']}):\n    q = httpx.QueryParams(p)\n    print(str(q), httpx.URL('https://example.org', params=p), q.multi_items())\nPY"
+            }
+          ],
+          "aggregatedOutput": "9:from ._types import PrimitiveData, QueryParamTypes, RawURL, URLTypes\n  File \"<stdin>\", line 2\n    for p in ({b'testparam': b'testvalue'}, [(b'café'.decode().encode(), b'naïve'.decode().encode())], {b'raw\\xff': [b'\\x00\\xff', b'ok']}):\n                                                      ^\nSyntaxError: bytes can only contain ASCII literal characters.\n",
+          "exitCode": 1,
+          "durationMs": 324
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399621377
+      },
+      "emittedAtMs": 1790399621384
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 234505,
+            "inputTokens": 230568,
+            "cachedInputTokens": 202752,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 3937,
+            "reasoningOutputTokens": 1756
+          },
+          "last": {
+            "totalTokens": 34163,
+            "inputTokens": 33899,
+            "cachedInputTokens": 32256,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 264,
+            "reasoningOutputTokens": 98
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399621395
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "fileChange",
+          "id": "exec-a439de0d-e3d4-4a0f-b5b4-f9b7dd473055",
+          "changes": [
+            {
+              "path": "/testbed/httpx/_urls.py",
+              "kind": {
+                "type": "update",
+                "move_path": null
+              },
+              "diff": "@@ -8,3 +8,3 @@\n from ._exceptions import InvalidURL\n-from ._types import PrimitiveData, QueryParamTypes, RawURL, URLTypes\n+from ._types import QueryParamTypes, RawURL, URLTypes\n from ._utils import primitive_value_to_str\n@@ -18,2 +18,8 @@\n \n+def _query_param_key_to_str(key: typing.Any) -> str:\n+    if isinstance(key, bytes):\n+        return key.decode(\"utf-8\", errors=\"surrogateescape\")\n+    return str(key)\n+\n+\n class URL:\n@@ -592,3 +598,3 @@\n             self._dict = {\n-                _query_param_to_str(k): [_query_param_to_str(item) for item in v]\n+                _query_param_key_to_str(k): [_query_param_to_str(item) for item in v]\n                 for k, v in dict_value.items()\n@@ -682,3 +688,3 @@\n         q._dict = dict(self._dict)\n-        q._dict[_query_param_to_str(key)] = [_query_param_to_str(value)]\n+        q._dict[_query_param_key_to_str(key)] = [_query_param_to_str(value)]\n         return q\n@@ -697,3 +703,3 @@\n         q._dict = dict(self._dict)\n-        key = _query_param_to_str(key)\n+        key = _query_param_key_to_str(key)\n         q._dict[key] = q.get_list(key) + [_query_param_to_str(value)]\n"
+            }
+          ],
+          "status": "completed"
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399636203
+      },
+      "emittedAtMs": 1790399636218
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 269538,
+            "inputTokens": 264851,
+            "cachedInputTokens": 236416,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 4687,
+            "reasoningOutputTokens": 2213
+          },
+          "last": {
+            "totalTokens": 35033,
+            "inputTokens": 34283,
+            "cachedInputTokens": 33664,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 750,
+            "reasoningOutputTokens": 457
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399636229
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "fileChange",
+          "id": "exec-0c19eac2-2959-4c37-b87f-59bf8d162392",
+          "changes": [
+            {
+              "path": "/testbed/tests/client/test_queryparams.py",
+              "kind": {
+                "type": "update",
+                "move_path": null
+              },
+              "diff": "@@ -35 +35,10 @@\n     assert response.url == \"http://example.org/echo_queryparams?first=str&second=dict\"\n+\n+\n+def test_client_queryparams_bytes():\n+    client = httpx.Client(\n+        transport=httpx.MockTransport(hello_world), params={b\"first\": b\"value\"}\n+    )\n+    response = client.get(\"http://example.org/\", params={b\"second\": [b\"\\xff\", b\"ok\"]})\n+\n+    assert response.url == \"http://example.org/?first=value&second=%FF&second=ok\"\n"
+            },
+            {
+              "path": "/testbed/tests/models/test_queryparams.py",
+              "kind": {
+                "type": "update",
+                "move_path": null
+              },
+              "diff": "@@ -78,2 +78,26 @@\n \n+@pytest.mark.parametrize(\n+    \"source\",\n+    [\n+        {b\"testparam\": b\"testvalue\"},\n+        [(b\"testparam\", b\"testvalue\")],\n+        ((b\"testparam\", b\"testvalue\"),),\n+    ],\n+)\n+def test_queryparams_bytes(source):\n+    q = httpx.QueryParams(source)\n+    assert q[\"testparam\"] == \"testvalue\"\n+    assert str(q) == \"testparam=testvalue\"\n+    assert httpx.URL(\"https://example.org\", params=source) == (\n+        \"https://example.org?testparam=testvalue\"\n+    )\n+\n+\n+def test_queryparams_bytes_encoding():\n+    q = httpx.QueryParams({b\"caf\\xc3\\xa9\": [b\"na\\xc3\\xafve\", b\"\\xff\"]})\n+    assert str(q) == \"caf%C3%A9=na%C3%AFve&caf%C3%A9=%FF\"\n+    assert httpx.QueryParams(str(q)) == q\n+    assert httpx.URL(\"https://example.org\", params=q).params == q\n+\n+\n def test_empty_query_params():\n@@ -106,2 +130,5 @@\n \n+    q = q.set(b\"a\", b\"\\xff\")\n+    assert str(q) == \"a=%FF\"\n+\n \n@@ -112,2 +139,5 @@\n \n+    q = q.add(b\"a\", b\"\\xff\")\n+    assert str(q) == \"a=123&a=456&a=%FF\"\n+\n \n"
+            }
+          ],
+          "status": "completed"
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399650402
+      },
+      "emittedAtMs": 1790399650417
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 305295,
+            "inputTokens": 299908,
+            "cachedInputTokens": 270464,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 5387,
+            "reasoningOutputTokens": 2232
+          },
+          "last": {
+            "totalTokens": 35757,
+            "inputTokens": 35057,
+            "cachedInputTokens": 34048,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 700,
+            "reasoningOutputTokens": 19
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399650428
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-b6d33bc0-2853-4796-af3b-955b28145d43",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'git diff --check && git diff --stat'",
+          "cwd": "/testbed",
+          "processId": "46880",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "git diff --check && git diff --stat"
+            }
+          ],
+          "aggregatedOutput": " httpx/_types.py                  |  6 +++---\n httpx/_urls.py                   | 32 +++++++++++++++++++++++---------\n tests/client/test_queryparams.py |  9 +++++++++\n tests/models/test_queryparams.py | 30 ++++++++++++++++++++++++++++++\n 4 files changed, 65 insertions(+), 12 deletions(-)\n",
+          "exitCode": 0,
+          "durationMs": 470
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399655672
+      },
+      "emittedAtMs": 1790399655678
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-12e6fc28-3b27-4728-82bd-a4fc9c7d5692",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc '/opt/conda/envs/testbed/bin/python -m pytest tests/models/test_queryparams.py tests/client/test_queryparams.py tests/models/test_url.py -q'",
+          "cwd": "/testbed",
+          "processId": "2877",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python -m pytest tests/models/test_queryparams.py tests/client/test_queryparams.py tests/models/test_url.py -q"
+            }
+          ],
+          "aggregatedOutput": "/opt/conda/envs/testbed/lib/python3.9/site-packages/pytest_asyncio/plugin.py:217: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n.............................................................            [100%]\n61 passed in 1.76s\n",
+          "exitCode": 0,
+          "durationMs": 12552
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399667718
+      },
+      "emittedAtMs": 1790399667724
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 341279,
+            "inputTokens": 335689,
+            "cachedInputTokens": 305280,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 5590,
+            "reasoningOutputTokens": 2239
+          },
+          "last": {
+            "totalTokens": 35984,
+            "inputTokens": 35781,
+            "cachedInputTokens": 34816,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 203,
+            "reasoningOutputTokens": 7
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399685191
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 377733,
+            "inputTokens": 372077,
+            "cachedInputTokens": 340864,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 5656,
+            "reasoningOutputTokens": 2259
+          },
+          "last": {
+            "totalTokens": 36454,
+            "inputTokens": 36388,
+            "cachedInputTokens": 35584,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 66,
+            "reasoningOutputTokens": 20
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399692295
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "msg_07d2747524ae21d2016ab754d2d97887d0a9787712138de710",
+          "text": "The focused tests pass, including a case where raw `0xFF` is encoded as `%FF` and survives a query string round trip. I’m checking formatting and the surrounding URL and client behavior now.",
+          "phase": "commentary",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399699823
+      },
+      "emittedAtMs": 1790399699828
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-3a709118-8b81-49da-8198-2538c3498c08",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"ps -ef | grep -E '[b]lack|[p]ytest' | head -n 20\"",
+          "cwd": "/testbed",
+          "processId": "69492",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "ps -ef | grep -E '[b]lack|[p]ytest' | head -n 20"
+            }
+          ],
+          "aggregatedOutput": "fatal library error, lookup self\n",
+          "exitCode": 0,
+          "durationMs": 109
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399703110
+      },
+      "emittedAtMs": 1790399703119
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-62eb9d95-455b-4c1d-ace8-8882fecd09c6",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'git diff -- httpx/_types.py httpx/_urls.py tests/models/test_queryparams.py tests/client/test_queryparams.py'",
+          "cwd": "/testbed",
+          "processId": "85301",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "git diff -- httpx/_types.py httpx/_urls.py tests/models/test_queryparams.py tests/client/test_queryparams.py"
+            }
+          ],
+          "aggregatedOutput": "diff --git a/httpx/_types.py b/httpx/_types.py\nindex 6b610e1..0312bfc 100644\n--- a/httpx/_types.py\n+++ b/httpx/_types.py\n@@ -46,9 +46,9 @@ URLTypes = Union[\"URL\", str]\n \n QueryParamTypes = Union[\n     \"QueryParams\",\n-    Mapping[str, Union[PrimitiveData, Sequence[PrimitiveData]]],\n-    List[Tuple[str, PrimitiveData]],\n-    Tuple[Tuple[str, PrimitiveData], ...],\n+    Mapping[Union[str, bytes], Union[PrimitiveData, bytes, Sequence[Union[PrimitiveData, bytes]]]],\n+    List[Tuple[Union[str, bytes], Union[PrimitiveData, bytes]]],\n+    Tuple[Tuple[Union[str, bytes], Union[PrimitiveData, bytes]], ...],\n     str,\n     bytes,\n ]\ndiff --git a/httpx/_urls.py b/httpx/_urls.py\nindex f26b2eb..20e1145 100644\n--- a/httpx/_urls.py\n+++ b/httpx/_urls.py\n@@ -6,10 +6,22 @@ import rfc3986\n import rfc3986.exceptions\n \n from ._exceptions import InvalidURL\n-from ._types import PrimitiveData, QueryParamTypes, RawURL, URLTypes\n+from ._types import QueryParamTypes, RawURL, URLTypes\n from ._utils import primitive_value_to_str\n \n \n+def _query_param_to_str(value: typing.Any) -> str:\n+    if isinstance(value, bytes):\n+        return value.decode(\"utf-8\", errors=\"surrogateescape\")\n+    return primitive_value_to_str(value)\n+\n+\n+def _query_param_key_to_str(key: typing.Any) -> str:\n+    if isinstance(key, bytes):\n+        return key.decode(\"utf-8\", errors=\"surrogateescape\")\n+    return str(key)\n+\n+\n class URL:\n     \"\"\"\n     url = httpx.URL(\"HTTPS://jo%40email.com:a%20secret@müller.de:1234/pa%20th?search=ab#anchorlink\")\n@@ -554,10 +566,11 @@ class QueryParams(typing.Mapping[str, str]):\n \n         value = args[0] if args else kwargs\n \n-        items: typing.Sequence[typing.Tuple[str, PrimitiveData]]\n         if value is None or isinstance(value, (str, bytes)):\n             value = value.decode(\"ascii\") if i\n[public excerpt truncated]\ne&caf%C3%A9=%FF\"\n+    assert httpx.QueryParams(str(q)) == q\n+    assert httpx.URL(\"https://example.org\", params=q).params == q\n+\n+\n def test_empty_query_params():\n     q = httpx.QueryParams({\"a\": \"\"})\n     assert str(q) == \"a=\"\n@@ -104,12 +128,18 @@ def test_queryparam_set():\n     q = q.set(\"a\", \"456\")\n     assert q == httpx.QueryParams(\"a=456\")\n \n+    q = q.set(b\"a\", b\"\\xff\")\n+    assert str(q) == \"a=%FF\"\n+\n \n def test_queryparam_add():\n     q = httpx.QueryParams(\"a=123\")\n     q = q.add(\"a\", \"456\")\n     assert q == httpx.QueryParams(\"a=123&a=456\")\n \n+    q = q.add(b\"a\", b\"\\xff\")\n+    assert str(q) == \"a=123&a=456&a=%FF\"\n+\n \n def test_queryparam_remove():\n     q = httpx.QueryParams(\"a=123\")\n",
+          "exitCode": 0,
+          "durationMs": 182,
+          "aggregatedOutput_sha256": "0d6646e893232a698a8f4d387cd44bef9be8ba111a8c2e9116d78aa4fb16890b",
+          "aggregatedOutput_original_characters": 6662
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399703156
+      },
+      "emittedAtMs": 1790399703158
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 414763,
+            "inputTokens": 408588,
+            "cachedInputTokens": 377088,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 6175,
+            "reasoningOutputTokens": 2556
+          },
+          "last": {
+            "totalTokens": 37030,
+            "inputTokens": 36511,
+            "cachedInputTokens": 36224,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 519,
+            "reasoningOutputTokens": 297
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399703961
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-37f838b1-1144-499f-860a-2ea6d39d6b29",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc '/opt/conda/envs/testbed/bin/python -m mypy --version'",
+          "cwd": "/testbed",
+          "processId": "63926",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python -m mypy --version"
+            }
+          ],
+          "aggregatedOutput": "/opt/conda/envs/testbed/lib/python3.9/site-packages/mypy/__main__.py:9: DeprecationWarning: mypy_extensions.TypedDict is deprecated, and will be removed in a future version. Use typing.TypedDict or typing_extensions.TypedDict instead.\n  from mypy.main import main, process_options\nmypy 1.0.1 (compiled: yes)\n",
+          "exitCode": 0,
+          "durationMs": 2326
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399705275
+      },
+      "emittedAtMs": 1790399705277
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "fileChange",
+          "id": "exec-92269a69-75d1-43c9-9a12-49068bdb2a0a",
+          "changes": [
+            {
+              "path": "/testbed/httpx/_types.py",
+              "kind": {
+                "type": "update",
+                "move_path": null
+              },
+              "diff": "@@ -46,7 +46,9 @@\n \n+QueryParamKey = Union[str, bytes]\n+QueryParamValue = Union[PrimitiveData, bytes]\n QueryParamTypes = Union[\n     \"QueryParams\",\n-    Mapping[Union[str, bytes], Union[PrimitiveData, bytes, Sequence[Union[PrimitiveData, bytes]]]],\n-    List[Tuple[Union[str, bytes], Union[PrimitiveData, bytes]]],\n-    Tuple[Tuple[Union[str, bytes], Union[PrimitiveData, bytes]], ...],\n+    Mapping[QueryParamKey, Union[QueryParamValue, Sequence[QueryParamValue]]],\n+    List[Tuple[QueryParamKey, QueryParamValue]],\n+    Tuple[Tuple[QueryParamKey, QueryParamValue], ...],\n     str,\n"
+            },
+            {
+              "path": "/testbed/httpx/_urls.py",
+              "kind": {
+                "type": "update",
+                "move_path": null
+              },
+              "diff": "@@ -661,7 +661,8 @@\n         \"\"\"\n+        key = _query_param_key_to_str(key)\n         if key in self._dict:\n-            return self._dict[str(key)][0]\n+            return self._dict[key][0]\n         return default\n \n-    def get_list(self, key: str) -> typing.List[str]:\n+    def get_list(self, key: typing.Union[str, bytes]) -> typing.List[str]:\n         \"\"\"\n@@ -674,3 +675,3 @@\n         \"\"\"\n-        return list(self._dict.get(str(key), []))\n+        return list(self._dict.get(_query_param_key_to_str(key), []))\n \n@@ -707,3 +708,3 @@\n \n-    def remove(self, key: str) -> \"QueryParams\":\n+    def remove(self, key: typing.Union[str, bytes]) -> \"QueryParams\":\n         \"\"\"\n@@ -719,3 +720,3 @@\n         q._dict = dict(self._dict)\n-        q._dict.pop(str(key), None)\n+        q._dict.pop(_query_param_key_to_str(key), None)\n         return q\n@@ -741,6 +742,6 @@\n     def __getitem__(self, key: typing.Any) -> str:\n-        return self._dict[key][0]\n+        return self._dict[_query_param_key_to_str(key)][0]\n \n     def __contains__(self, key: typing.Any) -> bool:\n-        return key in self._dict\n+        return _query_param_key_to_str(key) in self._dict\n \n"
+            },
+            {
+              "path": "/testbed/tests/models/test_queryparams.py",
+              "kind": {
+                "type": "update",
+                "move_path": null
+              },
+              "diff": "@@ -89,2 +89,6 @@\n     assert q[\"testparam\"] == \"testvalue\"\n+    assert q[b\"testparam\"] == \"testvalue\"\n+    assert q.get(b\"testparam\") == \"testvalue\"\n+    assert q.get_list(b\"testparam\") == [\"testvalue\"]\n+    assert b\"testparam\" in q\n     assert str(q) == \"testparam=testvalue\"\n@@ -96,4 +100,4 @@\n def test_queryparams_bytes_encoding():\n-    q = httpx.QueryParams({b\"caf\\xc3\\xa9\": [b\"na\\xc3\\xafve\", b\"\\xff\"]})\n-    assert str(q) == \"caf%C3%A9=na%C3%AFve&caf%C3%A9=%FF\"\n+    q = httpx.QueryParams({b\"caf\\xc3\\xa9\": [b\"na\\xc3\\xafve\", b\"\\xff\"], b\"\\xfe\": b\"\\x00\"})\n+    assert str(q) == \"caf%C3%A9=na%C3%AFve&caf%C3%A9=%FF&%FE=%00\"\n     assert httpx.QueryParams(str(q)) == q\n@@ -148,2 +152,5 @@\n \n+    q = httpx.QueryParams({b\"a\": b\"123\"})\n+    assert q.remove(b\"a\") == httpx.QueryParams(\"\")\n+\n \n"
+            }
+          ],
+          "status": "completed"
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399730890
+      },
+      "emittedAtMs": 1790399730907
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 455515,
+            "inputTokens": 447925,
+            "cachedInputTokens": 413440,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 7590,
+            "reasoningOutputTokens": 3041
+          },
+          "last": {
+            "totalTokens": 40752,
+            "inputTokens": 39337,
+            "cachedInputTokens": 36352,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 1415,
+            "reasoningOutputTokens": 485
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399730919
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-2445bf8e-b155-4ad3-a41c-5a3019421072",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc '/opt/conda/envs/testbed/bin/python -m black --check httpx/_types.py httpx/_urls.py tests/models/test_queryparams.py tests/client/test_queryparams.py'",
+          "cwd": "/testbed",
+          "processId": "95903",
+          "source": "unifiedExecStartup",
+          "status": "failed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python -m black --check httpx/_types.py httpx/_urls.py tests/models/test_queryparams.py tests/client/test_queryparams.py"
+            }
+          ],
+          "aggregatedOutput": null,
+          "exitCode": 130,
+          "durationMs": 80218
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399735386
+      },
+      "emittedAtMs": 1790399735392
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-2b81b566-3573-4ae9-8811-fff03676be37",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc '/opt/conda/envs/testbed/bin/python -m pytest tests/models/test_queryparams.py tests/client/test_queryparams.py tests/models/test_url.py -q'",
+          "cwd": "/testbed",
+          "processId": "19028",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python -m pytest tests/models/test_queryparams.py tests/client/test_queryparams.py tests/models/test_url.py -q"
+            }
+          ],
+          "aggregatedOutput": "/opt/conda/envs/testbed/lib/python3.9/site-packages/pytest_asyncio/plugin.py:217: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n.............................................................            [100%]\n61 passed in 1.82s\n",
+          "exitCode": 0,
+          "durationMs": 11569
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399747138
+      },
+      "emittedAtMs": 1790399747147
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 496469,
+            "inputTokens": 488701,
+            "cachedInputTokens": 452608,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 7768,
+            "reasoningOutputTokens": 3059
+          },
+          "last": {
+            "totalTokens": 40954,
+            "inputTokens": 40776,
+            "cachedInputTokens": 39168,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 178,
+            "reasoningOutputTokens": 18
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399747157
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-33c65535-69a2-4df9-95b9-a207f6b078d1",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'timeout 20s /opt/conda/envs/testbed/bin/python -m black --check httpx/_types.py httpx/_urls.py tests/models/test_queryparams.py tests/client/test_queryparams.py'",
+          "cwd": "/testbed",
+          "processId": "68130",
+          "source": "unifiedExecStartup",
+          "status": "failed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "timeout 20s /opt/conda/envs/testbed/bin/python -m black --check httpx/_types.py httpx/_urls.py tests/models/test_queryparams.py tests/client/test_queryparams.py"
+            }
+          ],
+          "aggregatedOutput": "Aborted!\nAborted!\nwould reformat httpx/_urls.py\nwould reformat tests/models/test_queryparams.py\n\nOh no! 💥 💔 💥\n2 files would be reformatted, 2 files would be left unchanged.\n",
+          "exitCode": 124,
+          "durationMs": 20148
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399776865
+      },
+      "emittedAtMs": 1790399776872
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 538226,
+            "inputTokens": 530059,
+            "cachedInputTokens": 493184,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 8167,
+            "reasoningOutputTokens": 3251
+          },
+          "last": {
+            "totalTokens": 41757,
+            "inputTokens": 41358,
+            "cachedInputTokens": 40576,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 399,
+            "reasoningOutputTokens": 192
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399786752
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "msg_07d2747524ae21d2016ab7552c9bd487d0b5e07501ffbb82d7",
+          "text": "The targeted tests still pass. The broader suite has started reporting failures; I’m checking their causes to see whether they relate to this change or to the test environment.",
+          "phase": "commentary",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399789373
+      },
+      "emittedAtMs": 1790399789380
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-ef622e07-1028-4a88-88db-a07e3e017d21",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"/opt/conda/envs/testbed/bin/python - <<'PY'\nfrom pathlib import Path\nfor name in ('httpx/_urls.py','tests/models/test_queryparams.py'):\n    for i, line in enumerate(Path(name).read_text().splitlines(), 1):\n        if len(line)>88 and ((name.endswith('_urls.py') and i<30 or 560<i<780) or (name.endswith('test_queryparams.py') and 70<i<165)):\n            print(name, i, len(line), line)\nPY\"",
+          "cwd": "/testbed",
+          "processId": "41088",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python - <<'PY'\nfrom pathlib import Path\nfor name in ('httpx/_urls.py','tests/models/test_queryparams.py'):\n    for i, line in enumerate(Path(name).read_text().splitlines(), 1):\n        if len(line)>88 and ((name.endswith('_urls.py') and i<30 or 560<i<780) or (name.endswith('test_queryparams.py') and 70<i<165)):\n            print(name, i, len(line), line)\nPY"
+            }
+          ],
+          "aggregatedOutput": "httpx/_urls.py 27 100     url = httpx.URL(\"HTTPS://jo%40email.com:a%20secret@müller.de:1234/pa%20th?search=ab#anchorlink\")\nhttpx/_urls.py 678 92     def set(self, key: typing.Union[str, bytes], value: typing.Any = None) -> \"QueryParams\":\nhttpx/_urls.py 693 92     def add(self, key: typing.Union[str, bytes], value: typing.Any = None) -> \"QueryParams\":\ntests/models/test_queryparams.py 101 89     q = httpx.QueryParams({b\"caf\\xc3\\xa9\": [b\"na\\xc3\\xafve\", b\"\\xff\"], b\"\\xfe\": b\"\\x00\"})\n",
+          "exitCode": 0,
+          "durationMs": 1294
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399794913
+      },
+      "emittedAtMs": 1790399794919
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 580738,
+            "inputTokens": 572250,
+            "cachedInputTokens": 534400,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 8488,
+            "reasoningOutputTokens": 3300
+          },
+          "last": {
+            "totalTokens": 42512,
+            "inputTokens": 42191,
+            "cachedInputTokens": 41216,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 321,
+            "reasoningOutputTokens": 49
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399798450
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-ff59cf0b-e6c2-408a-984e-ed69952df983",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"/opt/conda/envs/testbed/bin/python -m pytest -q -m 'not network'\"",
+          "cwd": "/testbed",
+          "processId": "58923",
+          "source": "unifiedExecStartup",
+          "status": "failed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python -m pytest -q -m 'not network'"
+            }
+          ],
+          "aggregatedOutput": "/opt/conda/envs/testbed/lib/python3.9/site-packages/pytest_asyncio/plugin.py:217: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\nFF...FFFFFFFFFFFFFFF.FFFFFFFFF",
+          "exitCode": 130,
+          "durationMs": 45558
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399802272
+      },
+      "emittedAtMs": 1790399802276
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 623748,
+            "inputTokens": 615112,
+            "cachedInputTokens": 576384,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 8636,
+            "reasoningOutputTokens": 3352
+          },
+          "last": {
+            "totalTokens": 43010,
+            "inputTokens": 42862,
+            "cachedInputTokens": 41984,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 148,
+            "reasoningOutputTokens": 52
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399807306
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-5b3d6cdb-cf06-4446-8738-9e85affc7261",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc '/opt/conda/envs/testbed/bin/python -m mypy httpx/_types.py httpx/_urls.py'",
+          "cwd": "/testbed",
+          "processId": "79800",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python -m mypy httpx/_types.py httpx/_urls.py"
+            }
+          ],
+          "aggregatedOutput": "/opt/conda/envs/testbed/lib/python3.9/site-packages/mypy/__main__.py:9: DeprecationWarning: mypy_extensions.TypedDict is deprecated, and will be removed in a future version. Use typing.TypedDict or typing_extensions.TypedDict instead.\n  from mypy.main import main, process_options\nSuccess: no issues found in 2 source files\n",
+          "exitCode": 0,
+          "durationMs": 56009
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399812724
+      },
+      "emittedAtMs": 1790399812731
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-fecc18e1-2b53-4f26-b9a6-4d3e04d777d1",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"/opt/conda/envs/testbed/bin/python -m pytest -q -x -m 'not network' --tb=short\"",
+          "cwd": "/testbed",
+          "processId": "95802",
+          "source": "unifiedExecStartup",
+          "status": "failed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python -m pytest -q -x -m 'not network' --tb=short"
+            }
+          ],
+          "aggregatedOutput": "/opt/conda/envs/testbed/lib/python3.9/site-packages/pytest_asyncio/plugin.py:217: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\nF\n=================================== FAILURES ===================================\n______________________________ test_get[asyncio] _______________________________\n/opt/conda/envs/testbed/lib/python3.9/site-packages/anyio/_core/_sockets.py:175: in try_connect\n    stream = await asynclib.connect_tcp(remote_host, remote_port, local_address)\n/opt/conda/envs/testbed/lib/python3.9/site-packages/anyio/_backends/_asyncio.py:2590: in connect_tcp\n    await get_running_loop().create_connection(\n/opt/conda/envs/testbed/lib/python3.9/asyncio/base_events.py:1065: in create_connection\n    raise exceptions[0]\n/opt/conda/envs/testbed/lib/python3.9/asyncio/base_events.py:1050: in create_connection\n    sock = await self._connect_sock(\n/opt/conda/envs/testbed/lib/python3.9/asyncio/base_events.py:944: in _connect_sock\n    sock = socket.socket(family=family, type=type_, proto=proto)\n/opt/conda/envs/testbed/lib/python3.9/socket.py:232: in __init__\n    _socket.socket.__init__(self, family, type, proto, fileno)\nE   PermissionError: [Errno 1] Operation not permitted\n\nThe above exception was the direct cause of the following exception:\n/opt/conda/envs/testbed/lib/python3\n[public excerpt truncated]\nvs/testbed/lib/python3.9/contextlib.py:137: in __exit__\n    self.gen.throw(typ, value, traceback)\nhttpx/_transports/default.py:77: in map_httpcore_exceptions\n    raise mapped_exc(message) from exc\nE   httpx.ConnectError: All connection attempts failed\n---------------------------- Captured stderr setup -----------------------------\nINFO:     Started server process [2]\nINFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)\n--------------------------- Captured stderr teardown ---------------------------\nINFO:     Shutting down\nINFO:     Finished server process [2]\n!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!\n1 failed, 4 deselected in 9.24s\n",
+          "exitCode": 1,
+          "durationMs": 19434,
+          "aggregatedOutput_sha256": "03250c1ea18bd6a14dc071969129646340260b25e68db2c62a663972a4fea3f5",
+          "aggregatedOutput_original_characters": 5375
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399830602
+      },
+      "emittedAtMs": 1790399830612
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 666978,
+            "inputTokens": 658237,
+            "cachedInputTokens": 619008,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 8741,
+            "reasoningOutputTokens": 3383
+          },
+          "last": {
+            "totalTokens": 43230,
+            "inputTokens": 43125,
+            "cachedInputTokens": 42624,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 105,
+            "reasoningOutputTokens": 31
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399830623
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 711791,
+            "inputTokens": 702958,
+            "cachedInputTokens": 662016,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 8833,
+            "reasoningOutputTokens": 3429
+          },
+          "last": {
+            "totalTokens": 44813,
+            "inputTokens": 44721,
+            "cachedInputTokens": 43008,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 92,
+            "reasoningOutputTokens": 46
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399833737
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 756796,
+            "inputTokens": 747838,
+            "cachedInputTokens": 706560,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 8958,
+            "reasoningOutputTokens": 3483
+          },
+          "last": {
+            "totalTokens": 45005,
+            "inputTokens": 44880,
+            "cachedInputTokens": 44544,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 125,
+            "reasoningOutputTokens": 54
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399867764
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-23361e5f-6c68-4692-a85b-7c8341ffd4b2",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc '/opt/conda/envs/testbed/bin/python -m black httpx/_urls.py tests/models/test_queryparams.py'",
+          "cwd": "/testbed",
+          "processId": "4524",
+          "source": "unifiedExecStartup",
+          "status": "failed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python -m black httpx/_urls.py tests/models/test_queryparams.py"
+            }
+          ],
+          "aggregatedOutput": null,
+          "exitCode": 130,
+          "durationMs": 35799
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399873526
+      },
+      "emittedAtMs": 1790399873533
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 802097,
+            "inputTokens": 792899,
+            "cachedInputTokens": 751232,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 9198,
+            "reasoningOutputTokens": 3673
+          },
+          "last": {
+            "totalTokens": 45301,
+            "inputTokens": 45061,
+            "cachedInputTokens": 44672,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 240,
+            "reasoningOutputTokens": 190
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399873543
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 847852,
+            "inputTokens": 838258,
+            "cachedInputTokens": 796160,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 9594,
+            "reasoningOutputTokens": 3711
+          },
+          "last": {
+            "totalTokens": 45755,
+            "inputTokens": 45359,
+            "cachedInputTokens": 44928,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 396,
+            "reasoningOutputTokens": 38
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399882858
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-5bf1a7e9-2777-4351-ab8b-6a8676a0c4d2",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc \"sed -n '565,578p' httpx/_urls.py && sed -n '670,710p' httpx/_urls.py && sed -n '94,110p' tests/models/test_queryparams.py && git status --short\"",
+          "cwd": "/testbed",
+          "processId": "41140",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "sed -n '565,578p' httpx/_urls.py && sed -n '670,710p' httpx/_urls.py && sed -n '94,110p' tests/models/test_queryparams.py && git status --short"
+            }
+          ],
+          "aggregatedOutput": "\n        Usage:\n\n        q = httpx.QueryParams(\"a=123&a=456&b=789\")\n        assert q.get_list(\"a\") == [\"123\", \"456\"]\n        \"\"\"\n        return list(self._dict.get(_query_param_key_to_str(key), []))\n\n    def set(\n        self, key: typing.Union[str, bytes], value: typing.Any = None\n    ) -> \"QueryParams\":\n        \"\"\"\n        Return a new QueryParams instance, setting the value of a key.\n\n        Usage:\n\n        q = httpx.QueryParams(\"a=123\")\n        q = q.set(\"a\", \"456\")\n        assert q == httpx.QueryParams(\"a=456\")\n        \"\"\"\n        q = QueryParams()\n        q._dict = dict(self._dict)\n        q._dict[_query_param_key_to_str(key)] = [_query_param_to_str(value)]\n        return q\n\n    def add(\n        self, key: typing.Union[str, bytes], value: typing.Any = None\n    ) -> \"QueryParams\":\n        \"\"\"\n        Return a new QueryParams instance, setting or appending the value of a key.\n\n        Usage:\n\n        q = httpx.QueryParams(\"a=123\")\n        q = q.add(\"a\", \"456\")\n        assert q == httpx.QueryParams(\"a=123&a=456\")\n        \"\"\"\n        q = QueryParams()\n        q._dict = dict(self._dict)\n        key = _query_param_key_to_str(key)\n        q._dict[key] = q.get_list(key) + [_query_param_to_str(value)]\n    assert str(q) == \"testparam=testvalue\"\n    assert httpx.URL(\"https://example.org\", params=source) == (\n        \"https://example.org?testparam=testvalue\"\n    )\n\n\ndef test_queryparams_bytes_encoding():\n    q = httpx.QueryParams(\n        {b\"caf\\xc3\\xa9\": [b\"na\\xc3\\xafve\", b\"\\xff\"], b\"\\xfe\": b\"\\x00\"}\n    )\n    assert str(q) == \"caf%C3%A9=na%C3%AFve&caf%C3%A9=%FF&%FE=%00\"\n    assert httpx.QueryParams(str(q)) == q\n    assert httpx.URL(\"https://example.org\", params=q).params == q\n\n\ndef test_empty_query_params():\n    q = httpx.QueryParams({\"a\": \"\"})\n M httpx/_types.py\n M httpx/_urls.py\n M tests/client/test_queryparams.py\n M tests/models/test_queryparams.py\n",
+          "exitCode": 0,
+          "durationMs": 153
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399886496
+      },
+      "emittedAtMs": 1790399886500
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 893785,
+            "inputTokens": 884085,
+            "cachedInputTokens": 841344,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 9700,
+            "reasoningOutputTokens": 3726
+          },
+          "last": {
+            "totalTokens": 45933,
+            "inputTokens": 45827,
+            "cachedInputTokens": 45184,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 106,
+            "reasoningOutputTokens": 15
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399886511
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-2239bfd2-f131-4ede-a322-4f20cce7ce4f",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'git diff --check && git diff --stat'",
+          "cwd": "/testbed",
+          "processId": "21478",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "git diff --check && git diff --stat"
+            }
+          ],
+          "aggregatedOutput": " httpx/_types.py                  |  8 ++++---\n httpx/_urls.py                   | 51 +++++++++++++++++++++++++++-------------\n tests/client/test_queryparams.py |  9 +++++++\n tests/models/test_queryparams.py | 39 ++++++++++++++++++++++++++++++\n 4 files changed, 88 insertions(+), 19 deletions(-)\n",
+          "exitCode": 0,
+          "durationMs": 418
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399902610
+      },
+      "emittedAtMs": 1790399902617
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-1a74c874-94dd-4e23-9406-fd91e5cdf0e8",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc '/opt/conda/envs/testbed/bin/python -m pytest tests/models/test_queryparams.py tests/client/test_queryparams.py tests/models/test_url.py -q'",
+          "cwd": "/testbed",
+          "processId": "11264",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python -m pytest tests/models/test_queryparams.py tests/client/test_queryparams.py tests/models/test_url.py -q"
+            }
+          ],
+          "aggregatedOutput": "/opt/conda/envs/testbed/lib/python3.9/site-packages/pytest_asyncio/plugin.py:217: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n.............................................................            [100%]\n61 passed in 1.82s\n",
+          "exitCode": 0,
+          "durationMs": 12325
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399914522
+      },
+      "emittedAtMs": 1790399914527
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 941005,
+            "inputTokens": 930715,
+            "cachedInputTokens": 887040,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 10290,
+            "reasoningOutputTokens": 4119
+          },
+          "last": {
+            "totalTokens": 47220,
+            "inputTokens": 46630,
+            "cachedInputTokens": 45696,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 590,
+            "reasoningOutputTokens": 393
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399932205
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 988703,
+            "inputTokens": 978336,
+            "cachedInputTokens": 933504,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 10367,
+            "reasoningOutputTokens": 4150
+          },
+          "last": {
+            "totalTokens": 47698,
+            "inputTokens": 47621,
+            "cachedInputTokens": 46464,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 77,
+            "reasoningOutputTokens": 31
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399940026
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "msg_07d2747524ae21d2016ab755c5992087d0ba4bb21c96fec830",
+          "text": "The focused tests and mypy pass. The broader suite’s first failure is a sandbox socket permission error during local server tests, so it cannot be used as a full regression check here. I’ve kept the changes centered on query parameter normalization and encoding.",
+          "phase": "commentary",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399945369
+      },
+      "emittedAtMs": 1790399945378
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-47d35486-765f-4040-8e7b-84f137a8d61c",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'timeout 45s /opt/conda/envs/testbed/bin/python -m black --check httpx/_types.py httpx/_urls.py tests/models/test_queryparams.py tests/client/test_queryparams.py'",
+          "cwd": "/testbed",
+          "processId": "45392",
+          "source": "unifiedExecStartup",
+          "status": "failed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "timeout 45s /opt/conda/envs/testbed/bin/python -m black --check httpx/_types.py httpx/_urls.py tests/models/test_queryparams.py tests/client/test_queryparams.py"
+            }
+          ],
+          "aggregatedOutput": "Aborted!\nAborted!\nAll done! ✨ 🍰 ✨\n4 files would be left unchanged.\n",
+          "exitCode": 124,
+          "durationMs": 45185
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399947355
+      },
+      "emittedAtMs": 1790399947359
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 1036581,
+            "inputTokens": 1026091,
+            "cachedInputTokens": 980992,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 10490,
+            "reasoningOutputTokens": 4170
+          },
+          "last": {
+            "totalTokens": 47878,
+            "inputTokens": 47755,
+            "cachedInputTokens": 47488,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 123,
+            "reasoningOutputTokens": 20
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399947364
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 1084777,
+            "inputTokens": 1074053,
+            "cachedInputTokens": 1028608,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 10724,
+            "reasoningOutputTokens": 4316
+          },
+          "last": {
+            "totalTokens": 48196,
+            "inputTokens": 47962,
+            "cachedInputTokens": 47616,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 234,
+            "reasoningOutputTokens": 146
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399983437
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 1133100,
+            "inputTokens": 1122306,
+            "cachedInputTokens": 1076352,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 10794,
+            "reasoningOutputTokens": 4340
+          },
+          "last": {
+            "totalTokens": 48323,
+            "inputTokens": 48253,
+            "cachedInputTokens": 47744,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 70,
+            "reasoningOutputTokens": 24
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399991469
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-1631fbf3-1b12-4f0b-90dd-d43b644c7633",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc '/opt/conda/envs/testbed/bin/python -m black --check -W 1 httpx/_types.py httpx/_urls.py tests/models/test_queryparams.py tests/client/test_queryparams.py'",
+          "cwd": "/testbed",
+          "processId": "92272",
+          "source": "unifiedExecStartup",
+          "status": "failed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python -m black --check -W 1 httpx/_types.py httpx/_urls.py tests/models/test_queryparams.py tests/client/test_queryparams.py"
+            }
+          ],
+          "aggregatedOutput": null,
+          "exitCode": 130,
+          "durationMs": 40276
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790399993681
+      },
+      "emittedAtMs": 1790399993688
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 1181556,
+            "inputTokens": 1170686,
+            "cachedInputTokens": 1124480,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 10870,
+            "reasoningOutputTokens": 4366
+          },
+          "last": {
+            "totalTokens": 48456,
+            "inputTokens": 48380,
+            "cachedInputTokens": 48128,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 76,
+            "reasoningOutputTokens": 26
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790399993741
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-8a55c2de-057a-447d-8faa-90f50d3d1bca",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc '/opt/conda/envs/testbed/bin/python -m pytest tests/models -q'",
+          "cwd": "/testbed",
+          "processId": "75069",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "/opt/conda/envs/testbed/bin/python -m pytest tests/models -q"
+            }
+          ],
+          "aggregatedOutput": "/opt/conda/envs/testbed/lib/python3.9/site-packages/pytest_asyncio/plugin.py:217: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n........................................................................ [ 37%]\n........................................................................ [ 75%]\n...............................................                          [100%]\n191 passed in 3.95s\n",
+          "exitCode": 0,
+          "durationMs": 13726
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790400010324
+      },
+      "emittedAtMs": 1790400010330
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 1230158,
+            "inputTokens": 1219200,
+            "cachedInputTokens": 1172736,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 10958,
+            "reasoningOutputTokens": 4390
+          },
+          "last": {
+            "totalTokens": 48602,
+            "inputTokens": 48514,
+            "cachedInputTokens": 48256,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 88,
+            "reasoningOutputTokens": 24
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790400010340
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "commandExecution",
+          "id": "exec-f82c5df5-f99c-4b99-812e-f7ff14cff7d2",
+          "pluginId": null,
+          "scriptPath": null,
+          "command": "/usr/bin/bash -lc 'git diff --check && git diff -- httpx/_types.py httpx/_urls.py tests/models/test_queryparams.py tests/client/test_queryparams.py'",
+          "cwd": "/testbed",
+          "processId": "11531",
+          "source": "unifiedExecStartup",
+          "status": "completed",
+          "commandActions": [
+            {
+              "type": "unknown",
+              "command": "git diff --check && git diff -- httpx/_types.py httpx/_urls.py tests/models/test_queryparams.py tests/client/test_queryparams.py"
+            }
+          ],
+          "aggregatedOutput": "diff --git a/httpx/_types.py b/httpx/_types.py\nindex 6b610e1..011846d 100644\n--- a/httpx/_types.py\n+++ b/httpx/_types.py\n@@ -44,11 +44,13 @@ RawURL = NamedTuple(\n \n URLTypes = Union[\"URL\", str]\n \n+QueryParamKey = Union[str, bytes]\n+QueryParamValue = Union[PrimitiveData, bytes]\n QueryParamTypes = Union[\n     \"QueryParams\",\n-    Mapping[str, Union[PrimitiveData, Sequence[PrimitiveData]]],\n-    List[Tuple[str, PrimitiveData]],\n-    Tuple[Tuple[str, PrimitiveData], ...],\n+    Mapping[QueryParamKey, Union[QueryParamValue, Sequence[QueryParamValue]]],\n+    List[Tuple[QueryParamKey, QueryParamValue]],\n+    Tuple[Tuple[QueryParamKey, QueryParamValue], ...],\n     str,\n     bytes,\n ]\ndiff --git a/httpx/_urls.py b/httpx/_urls.py\nindex f26b2eb..8b7175c 100644\n--- a/httpx/_urls.py\n+++ b/httpx/_urls.py\n@@ -6,10 +6,22 @@ import rfc3986\n import rfc3986.exceptions\n \n from ._exceptions import InvalidURL\n-from ._types import PrimitiveData, QueryParamTypes, RawURL, URLTypes\n+from ._types import QueryParamTypes, RawURL, URLTypes\n from ._utils import primitive_value_to_str\n \n \n+def _query_param_to_str(value: typing.Any) -> str:\n+    if isinstance(value, bytes):\n+        return value.decode(\"utf-8\", errors=\"surrogateescape\")\n+    return primitive_value_to_str(value)\n+\n+\n+def _query_param_key_to_str(key: typing.Any) -> str:\n+    if isinstance(key, bytes):\n+        return key.decode(\"utf-8\", errors=\"surrogateescape\")\n+    return str(key)\n+\n+\n class URL:\n     \"\"\"\n     url = httpx.URL(\"HTTPS://jo%40email.com:a%20secret@müller.de:1234/pa%20th?search=ab#anchorlink\")\n@@ -554,10 +566,11 @@ class QueryParams(typing.Mapping[str, str]):\n \n         value = args[0] if args else kwargs\n \n-        items: typing.Sequence[typing.Tuple[str, PrimitiveData]]\n         if value is None or isinstance(value, (str, b\n[public excerpt truncated]\n@ -104,18 +134,27 @@ def test_queryparam_set():\n     q = q.set(\"a\", \"456\")\n     assert q == httpx.QueryParams(\"a=456\")\n \n+    q = q.set(b\"a\", b\"\\xff\")\n+    assert str(q) == \"a=%FF\"\n+\n \n def test_queryparam_add():\n     q = httpx.QueryParams(\"a=123\")\n     q = q.add(\"a\", \"456\")\n     assert q == httpx.QueryParams(\"a=123&a=456\")\n \n+    q = q.add(b\"a\", b\"\\xff\")\n+    assert str(q) == \"a=123&a=456&a=%FF\"\n+\n \n def test_queryparam_remove():\n     q = httpx.QueryParams(\"a=123\")\n     q = q.remove(\"a\")\n     assert q == httpx.QueryParams(\"\")\n \n+    q = httpx.QueryParams({b\"a\": b\"123\"})\n+    assert q.remove(b\"a\") == httpx.QueryParams(\"\")\n+\n \n def test_queryparam_merge():\n     q = httpx.QueryParams(\"a=123\")\n",
+          "exitCode": 0,
+          "durationMs": 163,
+          "aggregatedOutput_sha256": "9615f4cfe7ba3543a7235f085e3f33bb8490b6ecb3fd244091124490ba318926",
+          "aggregatedOutput_original_characters": 8907
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790400014404
+      },
+      "emittedAtMs": 1790400014408
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 1279080,
+            "inputTokens": 1268034,
+            "cachedInputTokens": 1221120,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 11046,
+            "reasoningOutputTokens": 4407
+          },
+          "last": {
+            "totalTokens": 48922,
+            "inputTokens": 48834,
+            "cachedInputTokens": 48384,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 88,
+            "reasoningOutputTokens": 17
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790400014421
+    },
+    {
+      "method": "item/completed",
+      "params": {
+        "item": {
+          "type": "agentMessage",
+          "id": "msg_07d2747524ae21d2016ab75614cbcc87d0b6a1b1c4737bd8ab",
+          "text": "Updated [query parameter handling](/testbed/httpx/_urls.py) so `params` accepts bytes keys and values without turning them into `b'...'` text. UTF-8 and arbitrary bytes are percent encoded, and byte keys work with `QueryParams` lookups and edits. Added regression tests for URL and client requests.\n\nThe relevant model suite passed (191 tests), the focused client tests passed, and mypy found no issues. The broader suite could not complete because the sandbox blocks local socket connections.",
+          "phase": "final_answer",
+          "memoryCitation": null,
+          "delivery": null,
+          "questions": null
+        },
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "completedAtMs": 1790400021980
+      },
+      "emittedAtMs": 1790400021987
+    },
+    {
+      "method": "thread/tokenUsage/updated",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turnId": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+        "tokenUsage": {
+          "total": {
+            "totalTokens": 1330841,
+            "inputTokens": 1319494,
+            "cachedInputTokens": 1269760,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 11347,
+            "reasoningOutputTokens": 4598
+          },
+          "last": {
+            "totalTokens": 51761,
+            "inputTokens": 51460,
+            "cachedInputTokens": 48640,
+            "cacheWriteInputTokens": 0,
+            "outputTokens": 301,
+            "reasoningOutputTokens": 191
+          },
+          "modelContextWindow": 258400
+        }
+      },
+      "emittedAtMs": 1790400022009
+    },
+    {
+      "method": "turn/completed",
+      "params": {
+        "threadId": "01a0dc20-b9cd-7732-801e-dce34cb815a4",
+        "turn": {
+          "id": "01a0dc20-baf3-7e13-af01-1610f0d947fb",
+          "items": [
+            {
+              "type": "agentMessage",
+              "id": "msg_07d2747524ae21d2016ab75614cbcc87d0b6a1b1c4737bd8ab",
+              "text": "Updated [query parameter handling](/testbed/httpx/_urls.py) so `params` accepts bytes keys and values without turning them into `b'...'` text. UTF-8 and arbitrary bytes are percent encoded, and byte keys work with `QueryParams` lookups and edits. Added regression tests for URL and client requests.\n\nThe relevant model suite passed (191 tests), the focused client tests passed, and mypy found no issues. The broader suite could not complete because the sandbox blocks local socket connections.",
+              "phase": "final_answer",
+              "memoryCitation": null,
+              "delivery": null,
+              "questions": null
+            }
+          ],
+          "itemsView": "summary",
+          "status": "completed",
+          "error": null,
+          "startedAt": 1790399527,
+          "completedAt": 1790400022,
+          "durationMs": 494350
+        }
+      },
+      "emittedAtMs": 1790400022025
+    }
+  ],
+  "money": null,
+  "memory_scope": "SKILLS_ONLY_NO_GENERATION_NO_USE",
+  "instance_id": "encode__httpx-2523",
+  "arm": "NATIVE",
+  "repeat": 2,
+  "functional_result": "FAIL",
+  "protocol_validity": "VERIFIED"
+}

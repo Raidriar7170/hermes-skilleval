@@ -1,0 +1,247 @@
+diff --git a/httpx/_types.py b/httpx/_types.py
+index 6b610e1..011846d 100644
+--- a/httpx/_types.py
++++ b/httpx/_types.py
+@@ -44,11 +44,13 @@ RawURL = NamedTuple(
+ 
+ URLTypes = Union["URL", str]
+ 
++QueryParamKey = Union[str, bytes]
++QueryParamValue = Union[PrimitiveData, bytes]
+ QueryParamTypes = Union[
+     "QueryParams",
+-    Mapping[str, Union[PrimitiveData, Sequence[PrimitiveData]]],
+-    List[Tuple[str, PrimitiveData]],
+-    Tuple[Tuple[str, PrimitiveData], ...],
++    Mapping[QueryParamKey, Union[QueryParamValue, Sequence[QueryParamValue]]],
++    List[Tuple[QueryParamKey, QueryParamValue]],
++    Tuple[Tuple[QueryParamKey, QueryParamValue], ...],
+     str,
+     bytes,
+ ]
+diff --git a/httpx/_urls.py b/httpx/_urls.py
+index f26b2eb..8b7175c 100644
+--- a/httpx/_urls.py
++++ b/httpx/_urls.py
+@@ -6,10 +6,22 @@ import rfc3986
+ import rfc3986.exceptions
+ 
+ from ._exceptions import InvalidURL
+-from ._types import PrimitiveData, QueryParamTypes, RawURL, URLTypes
++from ._types import QueryParamTypes, RawURL, URLTypes
+ from ._utils import primitive_value_to_str
+ 
+ 
++def _query_param_to_str(value: typing.Any) -> str:
++    if isinstance(value, bytes):
++        return value.decode("utf-8", errors="surrogateescape")
++    return primitive_value_to_str(value)
++
++
++def _query_param_key_to_str(key: typing.Any) -> str:
++    if isinstance(key, bytes):
++        return key.decode("utf-8", errors="surrogateescape")
++    return str(key)
++
++
+ class URL:
+     """
+     url = httpx.URL("HTTPS://jo%40email.com:a%20secret@müller.de:1234/pa%20th?search=ab#anchorlink")
+@@ -554,10 +566,11 @@ class QueryParams(typing.Mapping[str, str]):
+ 
+         value = args[0] if args else kwargs
+ 
+-        items: typing.Sequence[typing.Tuple[str, PrimitiveData]]
+         if value is None or isinstance(value, (str, bytes)):
+             value = value.decode("ascii") if isinstance(value, bytes) else value
+-            self._dict = parse_qs(value, keep_blank_values=True)
++            self._dict = parse_qs(
++                value, keep_blank_values=True, errors="surrogateescape"
++            )
+         elif isinstance(value, QueryParams):
+             self._dict = {k: list(v) for k, v in value._dict.items()}
+         else:
+@@ -583,7 +596,7 @@ class QueryParams(typing.Mapping[str, str]):
+             # We coerce values `True` and `False` to JSON-like "true" and "false"
+             # representations, and coerce `None` values to the empty string.
+             self._dict = {
+-                str(k): [primitive_value_to_str(item) for item in v]
++                _query_param_key_to_str(k): [_query_param_to_str(item) for item in v]
+                 for k, v in dict_value.items()
+             }
+ 
+@@ -646,11 +659,12 @@ class QueryParams(typing.Mapping[str, str]):
+         q = httpx.QueryParams("a=123&a=456&b=789")
+         assert q.get("a") == "123"
+         """
++        key = _query_param_key_to_str(key)
+         if key in self._dict:
+-            return self._dict[str(key)][0]
++            return self._dict[key][0]
+         return default
+ 
+-    def get_list(self, key: str) -> typing.List[str]:
++    def get_list(self, key: typing.Union[str, bytes]) -> typing.List[str]:
+         """
+         Get all values from the query param for a given key.
+ 
+@@ -659,9 +673,11 @@ class QueryParams(typing.Mapping[str, str]):
+         q = httpx.QueryParams("a=123&a=456&b=789")
+         assert q.get_list("a") == ["123", "456"]
+         """
+-        return list(self._dict.get(str(key), []))
++        return list(self._dict.get(_query_param_key_to_str(key), []))
+ 
+-    def set(self, key: str, value: typing.Any = None) -> "QueryParams":
++    def set(
++        self, key: typing.Union[str, bytes], value: typing.Any = None
++    ) -> "QueryParams":
+         """
+         Return a new QueryParams instance, setting the value of a key.
+ 
+@@ -673,10 +689,12 @@ class QueryParams(typing.Mapping[str, str]):
+         """
+         q = QueryParams()
+         q._dict = dict(self._dict)
+-        q._dict[str(key)] = [primitive_value_to_str(value)]
++        q._dict[_query_param_key_to_str(key)] = [_query_param_to_str(value)]
+         return q
+ 
+-    def add(self, key: str, value: typing.Any = None) -> "QueryParams":
++    def add(
++        self, key: typing.Union[str, bytes], value: typing.Any = None
++    ) -> "QueryParams":
+         """
+         Return a new QueryParams instance, setting or appending the value of a key.
+ 
+@@ -688,10 +706,11 @@ class QueryParams(typing.Mapping[str, str]):
+         """
+         q = QueryParams()
+         q._dict = dict(self._dict)
+-        q._dict[str(key)] = q.get_list(key) + [primitive_value_to_str(value)]
++        key = _query_param_key_to_str(key)
++        q._dict[key] = q.get_list(key) + [_query_param_to_str(value)]
+         return q
+ 
+-    def remove(self, key: str) -> "QueryParams":
++    def remove(self, key: typing.Union[str, bytes]) -> "QueryParams":
+         """
+         Return a new QueryParams instance, removing the value of a key.
+ 
+@@ -703,7 +722,7 @@ class QueryParams(typing.Mapping[str, str]):
+         """
+         q = QueryParams()
+         q._dict = dict(self._dict)
+-        q._dict.pop(str(key), None)
++        q._dict.pop(_query_param_key_to_str(key), None)
+         return q
+ 
+     def merge(self, params: typing.Optional[QueryParamTypes] = None) -> "QueryParams":
+@@ -725,10 +744,10 @@ class QueryParams(typing.Mapping[str, str]):
+         return q
+ 
+     def __getitem__(self, key: typing.Any) -> str:
+-        return self._dict[key][0]
++        return self._dict[_query_param_key_to_str(key)][0]
+ 
+     def __contains__(self, key: typing.Any) -> bool:
+-        return key in self._dict
++        return _query_param_key_to_str(key) in self._dict
+ 
+     def __iter__(self) -> typing.Iterator[typing.Any]:
+         return iter(self.keys())
+@@ -748,7 +767,7 @@ class QueryParams(typing.Mapping[str, str]):
+         return sorted(self.multi_items()) == sorted(other.multi_items())
+ 
+     def __str__(self) -> str:
+-        return urlencode(self.multi_items())
++        return urlencode(self.multi_items(), errors="surrogateescape")
+ 
+     def __repr__(self) -> str:
+         class_name = self.__class__.__name__
+diff --git a/tests/client/test_queryparams.py b/tests/client/test_queryparams.py
+index e5acb0b..b6c1b95 100644
+--- a/tests/client/test_queryparams.py
++++ b/tests/client/test_queryparams.py
+@@ -33,3 +33,12 @@ def test_client_queryparams_echo():
+ 
+     assert response.status_code == 200
+     assert response.url == "http://example.org/echo_queryparams?first=str&second=dict"
++
++
++def test_client_queryparams_bytes():
++    client = httpx.Client(
++        transport=httpx.MockTransport(hello_world), params={b"first": b"value"}
++    )
++    response = client.get("http://example.org/", params={b"second": [b"\xff", b"ok"]})
++
++    assert response.url == "http://example.org/?first=value&second=%FF&second=ok"
+diff --git a/tests/models/test_queryparams.py b/tests/models/test_queryparams.py
+index 29b2ca6..cf4b898 100644
+--- a/tests/models/test_queryparams.py
++++ b/tests/models/test_queryparams.py
+@@ -76,6 +76,36 @@ def test_queryparam_types():
+     assert str(q) == "a=1&a=2"
+ 
+ 
++@pytest.mark.parametrize(
++    "source",
++    [
++        {b"testparam": b"testvalue"},
++        [(b"testparam", b"testvalue")],
++        ((b"testparam", b"testvalue"),),
++    ],
++)
++def test_queryparams_bytes(source):
++    q = httpx.QueryParams(source)
++    assert q["testparam"] == "testvalue"
++    assert q[b"testparam"] == "testvalue"
++    assert q.get(b"testparam") == "testvalue"
++    assert q.get_list(b"testparam") == ["testvalue"]
++    assert b"testparam" in q
++    assert str(q) == "testparam=testvalue"
++    assert httpx.URL("https://example.org", params=source) == (
++        "https://example.org?testparam=testvalue"
++    )
++
++
++def test_queryparams_bytes_encoding():
++    q = httpx.QueryParams(
++        {b"caf\xc3\xa9": [b"na\xc3\xafve", b"\xff"], b"\xfe": b"\x00"}
++    )
++    assert str(q) == "caf%C3%A9=na%C3%AFve&caf%C3%A9=%FF&%FE=%00"
++    assert httpx.QueryParams(str(q)) == q
++    assert httpx.URL("https://example.org", params=q).params == q
++
++
+ def test_empty_query_params():
+     q = httpx.QueryParams({"a": ""})
+     assert str(q) == "a="
+@@ -104,18 +134,27 @@ def test_queryparam_set():
+     q = q.set("a", "456")
+     assert q == httpx.QueryParams("a=456")
+ 
++    q = q.set(b"a", b"\xff")
++    assert str(q) == "a=%FF"
++
+ 
+ def test_queryparam_add():
+     q = httpx.QueryParams("a=123")
+     q = q.add("a", "456")
+     assert q == httpx.QueryParams("a=123&a=456")
+ 
++    q = q.add(b"a", b"\xff")
++    assert str(q) == "a=123&a=456&a=%FF"
++
+ 
+ def test_queryparam_remove():
+     q = httpx.QueryParams("a=123")
+     q = q.remove("a")
+     assert q == httpx.QueryParams("")
+ 
++    q = httpx.QueryParams({b"a": b"123"})
++    assert q.remove(b"a") == httpx.QueryParams("")
++
+ 
+ def test_queryparam_merge():
+     q = httpx.QueryParams("a=123")

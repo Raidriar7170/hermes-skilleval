@@ -1,0 +1,88 @@
+diff --git a/pyupgrade.py b/pyupgrade.py
+index 6f99694..0dbad5f 100644
+--- a/pyupgrade.py
++++ b/pyupgrade.py
+@@ -1239,7 +1239,7 @@ class FindPy3Plus(ast.NodeVisitor):
+         self.six_remove_decorators = set()  # type: Set[Offset]
+         self.six_simple = {}  # type: Dict[Offset, NameOrAttr]
+         self.six_type_ctx = {}  # type: Dict[Offset, NameOrAttr]
+-        self.six_with_metaclass = set()  # type: Set[Offset]
++        self.six_with_metaclass = {}  # type: Dict[Offset, ast.Call]
+ 
+         self._class_info_stack = []  # type: List[FindPy3Plus.ClassInfo]
+         self._in_comp = 0
+@@ -1336,7 +1336,7 @@ class FindPy3Plus(ast.NodeVisitor):
+                 self._is_six(node.bases[0].func, ('with_metaclass',)) and
+                 not _starargs(node.bases[0])
+         ):
+-            self.six_with_metaclass.add(_ast_to_offset(node.bases[0]))
++            self.six_with_metaclass[_ast_to_offset(node.bases[0])] = node.bases[0]
+ 
+         self._class_info_stack.append(FindPy3Plus.ClassInfo(node.name))
+         self.generic_visit(node)
+@@ -2037,8 +2037,30 @@ def _fix_py3_plus(contents_text):  # type: (str) -> str
+         elif token.offset in visitor.six_with_metaclass:
+             j = _find_open_paren(tokens, i)
+             func_args, end = _parse_call_args(tokens, j)
++            call = visitor.six_with_metaclass[token.offset]
++            removed_object = False
++            for arg_index in reversed(range(1, len(call.args))):
++                arg = call.args[arg_index]
++                if isinstance(arg, ast.Name) and arg.id == 'object':
++                    removed_object = True
++                    if arg_index + 1 < len(func_args):
++                        del tokens[func_args[arg_index][0]:func_args[arg_index + 1][0]]
++                    else:
++                        del tokens[func_args[arg_index - 1][1]:func_args[arg_index][1]]
++                    func_args, end = _parse_call_args(tokens, j)
+             if len(func_args) == 1:
+                 tmpl = WITH_METACLASS_NO_BASES_TMPL
++            elif removed_object:
++                trailing = end - 2
++                while tokens[trailing].name in NON_CODING_TOKENS:
++                    trailing -= 1
++                if tokens[trailing].src == ',':
++                    if tokens[end - 2].name in NON_CODING_TOKENS:
++                        tmpl = '{rest}metaclass={args[0]}'
++                    else:
++                        tmpl = '{rest} metaclass={args[0]}'
++                else:
++                    tmpl = WITH_METACLASS_BASES_TMPL
+             else:
+                 tmpl = WITH_METACLASS_BASES_TMPL
+             _replace_call(tokens, i, end, func_args, tmpl)
+diff --git a/tests/six_test.py b/tests/six_test.py
+index c58f5fc..f840a52 100644
+--- a/tests/six_test.py
++++ b/tests/six_test.py
+@@ -260,6 +260,30 @@ def test_fix_six_noop(s):
+ 
+             'class C(B, metaclass=M): pass',
+         ),
++        (
++            'class C(six.with_metaclass(abc.ABCMeta, object)): pass',
++            'class C(metaclass=abc.ABCMeta): pass',
++        ),
++        (
++            'class C(six.with_metaclass(M, object, B)): pass',
++            'class C(B, metaclass=M): pass',
++        ),
++        (
++            'class C(six.with_metaclass(M, B, object)): pass',
++            'class C(B, metaclass=M): pass',
++        ),
++        (
++            'class C(six.with_metaclass(M, B, object,)): pass',
++            'class C(B, metaclass=M): pass',
++        ),
++        (
++            'class C(six.with_metaclass(M, object, B,)): pass',
++            'class C(B, metaclass=M): pass',
++        ),
++        (
++            'class C(six.with_metaclass(M, object, object)): pass',
++            'class C(metaclass=M): pass',
++        ),
+         (
+             'from six import with_metaclass\n'
+             'class C(with_metaclass(M, B)): pass\n',

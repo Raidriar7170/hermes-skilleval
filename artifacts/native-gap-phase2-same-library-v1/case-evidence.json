@@ -1,0 +1,246 @@
+{
+  "analysis_stage": "POST_ALL_16_CALLS_AND_FROZEN_AUTHOR_ACCEPTANCE",
+  "no_new_model_calls": true,
+  "not_causal_proof": true,
+  "cases": [
+    {
+      "instance_id": "asottile__pyupgrade-127",
+      "source_skill": "pyupgrade-del-name-context",
+      "source_skill_path": "configs/native-gap-phase2-same-library-v1/skills/pyupgrade-del-name-context/SKILL.md",
+      "source_skill_sha256": "b8570846d65bc4f807d54eac124daf1bdfed9af317bb2c4a430e9db037fadd1c",
+      "source_excerpt": "1. Reduce the report to a function containing `del bar` and reproduce the CLI failure. The recorded run reached `FindPy3Plus.visit_Name`, which raised on a name context outside `ast.Load` and `ast.Store`.",
+      "interpretation": "保留 yield 参数所需括号；四份候选均通过。",
+      "competing_explanation": "任务可直接由局部源码完成；推荐的 del/format/iterator 前提与 yield 括号不同。",
+      "explicit_skill_use_observed": false,
+      "implicit_body_context": "UNKNOWN",
+      "records": [
+        {
+          "run_id": "asottile__pyupgrade-127-assist-r1",
+          "events": [],
+          "result_path": "runs/asottile__pyupgrade-127-assist-r1/result.json",
+          "patch_path": "runs/asottile__pyupgrade-127-assist-r1/candidate.patch",
+          "check_path": "checks/asottile__pyupgrade-127-assist-r1/result.json",
+          "functional_result": "PASS"
+        },
+        {
+          "run_id": "asottile__pyupgrade-127-native-r1",
+          "events": [],
+          "result_path": "runs/asottile__pyupgrade-127-native-r1/result.json",
+          "patch_path": "runs/asottile__pyupgrade-127-native-r1/candidate.patch",
+          "check_path": "checks/asottile__pyupgrade-127-native-r1/result.json",
+          "functional_result": "PASS"
+        },
+        {
+          "run_id": "asottile__pyupgrade-127-assist-r2",
+          "events": [],
+          "result_path": "runs/asottile__pyupgrade-127-assist-r2/result.json",
+          "patch_path": "runs/asottile__pyupgrade-127-assist-r2/candidate.patch",
+          "check_path": "checks/asottile__pyupgrade-127-assist-r2/result.json",
+          "functional_result": "PASS"
+        },
+        {
+          "run_id": "asottile__pyupgrade-127-native-r2",
+          "events": [],
+          "result_path": "runs/asottile__pyupgrade-127-native-r2/result.json",
+          "patch_path": "runs/asottile__pyupgrade-127-native-r2/candidate.patch",
+          "check_path": "checks/asottile__pyupgrade-127-native-r2/result.json",
+          "functional_result": "PASS"
+        }
+      ]
+    },
+    {
+      "instance_id": "encode__httpx-861",
+      "source_skill": "httpx-redirect-body-headers",
+      "source_skill_path": "configs/native-gap-phase2-same-library-v1/skills/httpx-redirect-body-headers/SKILL.md",
+      "source_skill_sha256": "934638507b8efef99d5ad156585f07dd5261d2b9d5c5aad0c779f7afc2ce458d",
+      "source_excerpt": "1. Reproduce locally with a POST carrying a five-byte body and a 302 redirect. Inspect **both** the redirected method and its outgoing headers. The recorded pre-change mock observed GET with `Content-Length: 5`; an HTTP/1.1 local-server reproduction sent the same inconsistent GET headers. A cross-origin redirect changed `host` but left `Content-Length` intact.",
+      "interpretation": "四份生产改动均将 files is not None 改为 files；空 body 仍带 URLencoded headers。",
+      "competing_explanation": "公开题面强调 body，作者还要求 headers 为空；推荐重定向技能属不同前提，不能归因误用。",
+      "explicit_skill_use_observed": false,
+      "implicit_body_context": "UNKNOWN",
+      "records": [
+        {
+          "run_id": "encode__httpx-861-assist-r1",
+          "events": [
+            {
+              "event_index": 5,
+              "item_id": "exec-acad88d4-fb05-4090-a25b-915b438b99a1",
+              "command": "/usr/bin/bash -lc \"git status --short; rg --files | rg '(\"'^|/)(AGENTS'\"\\\\.md|test.*multipart|test.*content|_content_streams\\\\.py|_multipart\\\\.py)\"'$'\"' | head -100\"",
+              "exit_code": 0
+            },
+            {
+              "event_index": 10,
+              "item_id": "exec-24544aa6-cfbe-44e9-90df-6c8c669f19e9",
+              "command": "/usr/bin/bash -lc \"sed -n '1,390p' httpx/_content_streams.py\"",
+              "exit_code": 0
+            }
+          ],
+          "result_path": "runs/encode__httpx-861-assist-r1/result.json",
+          "patch_path": "runs/encode__httpx-861-assist-r1/candidate.patch",
+          "check_path": "checks/encode__httpx-861-assist-r1/result.json",
+          "functional_result": "FAIL"
+        },
+        {
+          "run_id": "encode__httpx-861-native-r1",
+          "events": [
+            {
+              "event_index": 9,
+              "item_id": "exec-48a15f0e-6e3f-4660-9541-45371e55c265",
+              "command": "/usr/bin/bash -lc \"sed -n '1,390p' httpx/_content_streams.py\"",
+              "exit_code": 0
+            },
+            {
+              "event_index": 10,
+              "item_id": "exec-7e8b752b-8d38-42ae-bd3f-ce50eb8956d3",
+              "command": "/usr/bin/bash -lc \"sed -n '1,360p' tests/test_content_streams.py && sed -n '1,340p' tests/test_multipart.py\"",
+              "exit_code": 0
+            }
+          ],
+          "result_path": "runs/encode__httpx-861-native-r1/result.json",
+          "patch_path": "runs/encode__httpx-861-native-r1/candidate.patch",
+          "check_path": "checks/encode__httpx-861-native-r1/result.json",
+          "functional_result": "FAIL"
+        },
+        {
+          "run_id": "encode__httpx-861-assist-r2",
+          "events": [
+            {
+              "event_index": 10,
+              "item_id": "exec-6f9fbd0b-a56d-42cb-8f6e-a68e027b3814",
+              "command": "/usr/bin/bash -lc \"sed -n '1,390p' httpx/_content_streams.py\"",
+              "exit_code": 0
+            },
+            {
+              "event_index": 11,
+              "item_id": "exec-a9f85405-be07-4612-92df-8eadccad1fd3",
+              "command": "/usr/bin/bash -lc 'cat tests/test_content_streams.py && cat tests/test_multipart.py'",
+              "exit_code": 0
+            }
+          ],
+          "result_path": "runs/encode__httpx-861-assist-r2/result.json",
+          "patch_path": "runs/encode__httpx-861-assist-r2/candidate.patch",
+          "check_path": "checks/encode__httpx-861-assist-r2/result.json",
+          "functional_result": "FAIL"
+        },
+        {
+          "run_id": "encode__httpx-861-native-r2",
+          "events": [
+            {
+              "event_index": 10,
+              "item_id": "exec-7e5d513d-a4b0-45db-803f-a5834841a26d",
+              "command": "/usr/bin/bash -lc \"sed -n '1,390p' httpx/_content_streams.py\"",
+              "exit_code": 0
+            },
+            {
+              "event_index": 11,
+              "item_id": "exec-3d2636f3-4021-41bc-9bb5-ccaf034c5e77",
+              "command": "/usr/bin/bash -lc 'cat tests/test_content_streams.py && cat tests/test_multipart.py'",
+              "exit_code": 0
+            }
+          ],
+          "result_path": "runs/encode__httpx-861-native-r2/result.json",
+          "patch_path": "runs/encode__httpx-861-native-r2/candidate.patch",
+          "check_path": "checks/encode__httpx-861-native-r2/result.json",
+          "functional_result": "FAIL"
+        }
+      ]
+    },
+    {
+      "instance_id": "encode__httpx-2523",
+      "source_skill": "httpx-valueless-query-params",
+      "source_skill_path": "configs/native-gap-phase2-same-library-v1/skills/httpx-valueless-query-params/SKILL.md",
+      "source_skill_sha256": "fb6df7cea56dac9539058a78472bafea109b8f09f656b1e8c8181aca3be59e10",
+      "source_excerpt": "1. **Reproduce both parse and merge.** The source's baseline showed `QueryParams(\"foobar\")` had no keys and `https://httpbin.org/get?foobar` merged with `{\"hello\": \"world\"}` became only `hello=world`. Compare direct `QueryParams`, `URL.params`, and the final request URL, including an async client if that is the affected path.",
+      "interpretation": "四份候选均解码 bytes 并扩展 QueryParams；作者要求 TypeError，均未抛出。",
+      "competing_explanation": "标题支持 bytes 与正文异常预期存在歧义；旧 valueless-key 经验不决定 bytes 输入契约。",
+      "explicit_skill_use_observed": false,
+      "implicit_body_context": "UNKNOWN",
+      "records": [
+        {
+          "run_id": "encode__httpx-2523-assist-r1",
+          "events": [
+            {
+              "event_index": 4,
+              "item_id": "exec-a85e13a8-544c-4a05-ad93-61543f243df3",
+              "command": "/usr/bin/bash -lc \"rg --files -g 'AGENTS.md' -g '*query*' -g 'test_urls.py' -g 'test_models.py' | head -80\"",
+              "exit_code": 0
+            },
+            {
+              "event_index": 8,
+              "item_id": "exec-83708122-a0ca-48de-be48-8002f52f64e8",
+              "command": "/usr/bin/bash -lc \"find . -name AGENTS.md -o -iname '*query*' -o -name 'test_urls.py' -o -name 'test_models.py' | head -80\"",
+              "exit_code": 0
+            }
+          ],
+          "result_path": "runs/encode__httpx-2523-assist-r1/result.json",
+          "patch_path": "runs/encode__httpx-2523-assist-r1/candidate.patch",
+          "check_path": "checks/encode__httpx-2523-assist-r1/result.json",
+          "functional_result": "FAIL"
+        },
+        {
+          "run_id": "encode__httpx-2523-native-r1",
+          "events": [
+            {
+              "event_index": 12,
+              "item_id": "exec-7c4c4c79-8ec0-4943-907d-69d238ffaef0",
+              "command": "/usr/bin/bash -lc \"sed -n '1,220p' httpx/_urls.py\"",
+              "exit_code": 0
+            },
+            {
+              "event_index": 13,
+              "item_id": "exec-565f8188-8cca-4a8c-b381-282601f45d1d",
+              "command": "/usr/bin/bash -lc \"sed -n '500,760p' httpx/_urls.py\"",
+              "exit_code": 0
+            }
+          ],
+          "result_path": "runs/encode__httpx-2523-native-r1/result.json",
+          "patch_path": "runs/encode__httpx-2523-native-r1/candidate.patch",
+          "check_path": "checks/encode__httpx-2523-native-r1/result.json",
+          "functional_result": "FAIL"
+        },
+        {
+          "run_id": "encode__httpx-2523-native-r2",
+          "events": [
+            {
+              "event_index": 11,
+              "item_id": "exec-48beeb20-b8b4-4568-8b60-41fedbc58588",
+              "command": "/usr/bin/bash -lc \"sed -n '1,260p' httpx/_urls.py\"",
+              "exit_code": 0
+            },
+            {
+              "event_index": 14,
+              "item_id": "exec-2cd3af8b-cd34-4e27-8e75-0386b5ca991a",
+              "command": "/usr/bin/bash -lc \"sed -n '500,760p' httpx/_urls.py && cat tests/models/test_queryparams.py\"",
+              "exit_code": 0
+            }
+          ],
+          "result_path": "runs/encode__httpx-2523-native-r2/result.json",
+          "patch_path": "runs/encode__httpx-2523-native-r2/candidate.patch",
+          "check_path": "checks/encode__httpx-2523-native-r2/result.json",
+          "functional_result": "FAIL"
+        },
+        {
+          "run_id": "encode__httpx-2523-assist-r2",
+          "events": [
+            {
+              "event_index": 8,
+              "item_id": "exec-a1019258-f8de-447d-86aa-242aac594658",
+              "command": "/usr/bin/bash -lc \"sed -n '1,240p' httpx/_urls.py; sed -n '500,750p' httpx/_urls.py\"",
+              "exit_code": 0
+            },
+            {
+              "event_index": 12,
+              "item_id": "exec-95968182-e044-4352-b926-ceebc6e90d0c",
+              "command": "/usr/bin/bash -lc \"cat httpx/_utils.py; sed -n '1,180p' httpx/_types.py; sed -n '750,810p' httpx/_urls.py\"",
+              "exit_code": 0
+            }
+          ],
+          "result_path": "runs/encode__httpx-2523-assist-r2/result.json",
+          "patch_path": "runs/encode__httpx-2523-assist-r2/candidate.patch",
+          "check_path": "checks/encode__httpx-2523-assist-r2/result.json",
+          "functional_result": "FAIL"
+        }
+      ]
+    }
+  ]
+}

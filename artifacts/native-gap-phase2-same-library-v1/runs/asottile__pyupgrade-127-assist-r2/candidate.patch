@@ -1,0 +1,52 @@
+diff --git a/pyupgrade.py b/pyupgrade.py
+index b67cbf7..820fc93 100644
+--- a/pyupgrade.py
++++ b/pyupgrade.py
+@@ -564,6 +564,13 @@ def _fix_extraneous_parens(tokens, i):
+     if all(t.name in NON_CODING_TOKENS for t in tokens[start + 1:i]):
+         return
+ 
++    # A yield expression must be parenthesized when it is a call argument.
++    first = start + 1
++    while tokens[first].name in NON_CODING_TOKENS:
++        first += 1
++    if tokens[first].src == 'yield':
++        return
++
+     # search forward for the next non-coding token
+     i += 1
+     while tokens[i].name in NON_CODING_TOKENS:
+diff --git a/tests/pyupgrade_test.py b/tests/pyupgrade_test.py
+index 9ab97d3..3825e45 100644
+--- a/tests/pyupgrade_test.py
++++ b/tests/pyupgrade_test.py
+@@ -519,6 +519,29 @@ def test_fix_extra_parens_noop(s):
+     assert _fix_tokens(s, py3_plus=False) == s
+ 
+ 
++@pytest.mark.parametrize(
++    ('s', 'expected'),
++    (
++        (
++            'def f():\n    return int((yield read_message()))\n',
++            'def f():\n    return int((yield read_message()))\n',
++        ),
++        (
++            'def f():\n    return list((yield from values))\n',
++            'def f():\n    return list((yield from values))\n',
++        ),
++        (
++            'def f():\n    return int(((yield read_message())))\n',
++            'def f():\n    return int((yield read_message()))\n',
++        ),
++    ),
++)
++def test_fix_extra_parens_yield(s, expected):
++    result = _fix_tokens(s, py3_plus=False)
++    assert result == expected
++    ast.parse(result)
++
++
+ @pytest.mark.parametrize(
+     ('s', 'expected'),
+     (

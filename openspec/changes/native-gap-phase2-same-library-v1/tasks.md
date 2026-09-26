@@ -8,8 +8,8 @@
 - [x] 2.3 Qualify four environments using author base/reference checks and retain failed qualifications.
 - [x] 2.4 Verify MiniLM identity, implement metadata MMR, run two harmless preflights and freeze all assets.
 ## 3. Real comparison
-- [ ] 3.1 Execute sixteen independent repairs with complete online clocks and no hidden score feedback.
-- [ ] 3.2 Reconstruct every candidate and record trusted target/protected checks with UNKNOWN preserved.
+- [x] 3.1 Execute sixteen independent repairs with complete online clocks and no hidden score feedback.
+- [x] 3.2 Reconstruct every candidate and record trusted target/protected checks with UNKNOWN preserved.
 ## 4. Delivery
-- [ ] 4.1 Write both full result tables, up to three evidence cases and one next research decision.
+- [x] 4.1 Write both full result tables, up to three evidence cases and one next research decision.
 - [ ] 4.2 Complete independent read-only review, required tests, final SHA closure and exact-head CI; publish stacked Draft PR only.

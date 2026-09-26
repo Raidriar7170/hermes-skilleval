@@ -1,0 +1,42 @@
+diff --git a/pyupgrade.py b/pyupgrade.py
+index b67cbf7..049ba6b 100644
+--- a/pyupgrade.py
++++ b/pyupgrade.py
+@@ -554,6 +554,9 @@ def _fix_extraneous_parens(tokens, i):
+         # found comma at depth 1: this is a tuple
+         if depth == 1 and tokens[i].src == ',':
+             return
++        # yield expressions need parentheses when used as call arguments
++        elif depth == 1 and tokens[i].src == 'yield':
++            return
+         elif tokens[i].src in OPENING:
+             depth += 1
+         elif tokens[i].src in CLOSING:
+diff --git a/tests/pyupgrade_test.py b/tests/pyupgrade_test.py
+index 9ab97d3..65f3e32 100644
+--- a/tests/pyupgrade_test.py
++++ b/tests/pyupgrade_test.py
+@@ -513,6 +513,8 @@ def test_fix_octal_literal(s, expected):
+         'print((\n))',
+         # don't touch parenthesized generators
+         'sum((block.code for block in blocks), [])',
++        'def f():\n    return int((yield ws.read_message()))\n',
++        'def f():\n    return int((yield from messages))\n',
+     ),
+ )
+ def test_fix_extra_parens_noop(s):
+@@ -525,6 +527,14 @@ def test_fix_extra_parens_noop(s):
+         ('print(("hello world"))', 'print("hello world")'),
+         ('print(("foo{}".format(1)))', 'print("foo{}".format(1))'),
+         ('print((((1))))', 'print(1)'),
++        (
++            'def f():\n    return int(((yield ws.read_message())))\n',
++            'def f():\n    return int((yield ws.read_message()))\n',
++        ),
++        (
++            'def f():\n    return int((1 + (yield value)))\n',
++            'def f():\n    return int(1 + (yield value))\n',
++        ),
+         (
+             'print(\n'
+             '    ("foo{}".format(1))\n'
